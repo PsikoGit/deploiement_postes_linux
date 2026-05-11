@@ -1,7 +1,49 @@
-Documentation technique rédigé lors de mon stage au sein de Réseau Canopé. 
+# Gestion de Parc Linux — Réseau Canopé
 
-Mission : trouver une solution analogue à Microsoft Intune pour les postes de formation sous Linux : (déploiement d'OS, gestion, configuration, administration, supervision, sécurisation) à distance de postes sous Linux.
+> Documentation technique rédigée lors d'un stage au sein de **Réseau Canopé**.
 
-Les solutions apportés ici ne seront pas adaptés à tous les usages, le contexte dans lequel j'ai travaillé est le suivant : des centaines de LAN répartis dans les villes françaises. Par conséquent il a fallu éviter les solutions avec un serveur local dans chaque LAN, ça serait trop compliqué à mettre en place et surtout à maintenir. Il a fallu donc réfléchir à une solution centralisée avec un serveur distant pour apporter de la flexibilité et faciliter la gestion du parc informatique.
+---
 
-Documentation pour configurer le serveur PXE/iPXE afin de déployer de manière automatiser des postes Ubuntu à distance : [Déployer des postes Ubuntu](documentation-postes-ubuntu.md)
+## Mission
+
+Trouver une solution analogue à **Microsoft Intune** pour les postes de formation sous Linux :
+
+| Domaine | Description |
+|---|---|
+| Déploiement | Installation automatisée d'OS à distance |
+| Configuration | Paramétrage uniforme des postes |
+| Administration | Gestion centralisée du parc |
+| Supervision | Monitoring et état des machines |
+| Sécurisation | Durcissement et conformité |
+
+---
+
+## Contexte
+
+Les solutions documentées ici **ne sont pas adaptées à tous les usages**. Le contexte dans lequel ce travail a été réalisé est spécifique :
+
+```
+Réseau Canopé
+└── Centaines de LAN
+    ├── Ville A
+    ├── Ville B
+    ├── Ville C
+    └── ...
+```
+
+> **Contrainte principale** : éviter un serveur local dans chaque LAN — trop complexe à déployer et à maintenir à grande échelle.
+
+La solution retenue repose sur une **architecture centralisée avec un serveur distant**, apportant :
+
+- Flexibilité de gestion
+- Maintenance simplifiée
+- Déploiement uniforme sur tous les sites
+- Pas d'infrastructure locale à maintenir
+
+---
+
+## Documentation
+
+| Document | Description |
+|---|---|
+| [Déployer des postes Ubuntu](documentation-postes-ubuntu.md) | Configuration du serveur PXE/iPXE pour déployer automatiquement des postes Ubuntu à distance |
