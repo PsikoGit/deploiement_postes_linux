@@ -2,7 +2,7 @@
 
 ## Sommaire
 
-- [0. Avant-propos](#0-avantpropos)
+- [0. Avant-propos](#0-avant-propos)
 - [1. Configuration IP statique](#1-ip-statique-sur-le-serveur)
 - [2. Installation des paquets](#2-installation-des-paquets)
 - [3. Configuration TFTP](#3-configuration-tftp)
