@@ -160,7 +160,8 @@ dhcp-option=vendor:PXEClient,6,2b
 
 # ProxyDHCP — on ne distribue pas de paramètres IP car un serveur
 # DHCP gère déjà ça
-dhcp-range=192.168.1.0,proxy
+dhcp-range=IP_RESEAU,proxy
+#Exemple : dhcp-range=192.168.1.0,proxy
 
 # Éviter des erreurs avec certains vieux clients DHCP
 dhcp-no-override
@@ -173,23 +174,24 @@ dhcp-match=set:ipxe-menu,175,39
 tag-if=set:ipxe-ok,tag:ipxe-http,tag:ipxe-menu
 
 # Si le client n'est pas iPXE, on lui envoie le bootloader iPXE
+
 # Client en Legacy BIOS
-pxe-service=tag:!ipxe-ok,X86PC,PXE,undionly.kpxe,192.168.1.187
+pxe-service=tag:!ipxe-ok,X86PC,PXE,undionly.kpxe,IP_SERVEUR
 # Client en UEFI 32 bit (rare mais sait-on jamais !)
-pxe-service=tag:!ipxe-ok,IA32_EFI,PXE,ipxe.efi,192.168.1.187
+pxe-service=tag:!ipxe-ok,IA32_EFI,PXE,ipxe.efi,IP_SERVEUR
 # Client en BC_EFI (carte réseau rare)
-pxe-service=tag:!ipxe-ok,BC_EFI,PXE,ipxe.efi,192.168.1.187
+pxe-service=tag:!ipxe-ok,BC_EFI,PXE,ipxe.efi,IP_SERVEUR
 # Client en UEFI 64 bit (tous les PCs modernes)
-pxe-service=tag:!ipxe-ok,X86-64_EFI,PXE,ipxe.efi,192.168.1.187
+pxe-service=tag:!ipxe-ok,X86-64_EFI,PXE,ipxe.efi,IP_SERVEUR
 
 # Si le client est iPXE, on passe à la suite
-dhcp-boot=tag:ipxe-ok,http://192.168.1.187/install.ipxe
+dhcp-boot=tag:ipxe-ok,http://IP_SERVEUR/install.ipxe
 ```
 
 ```bash
 systemctl restart dnsmasq.service
 ```
-Il y a plusieurs manières et syntaxes d'écrire le fichier pur reproduire le même fonctionnement, notamment sur la détection iPXE.
+Il y a plusieurs manières et syntaxes d'écrire le fichier pour reproduire le même fonctionnement, notamment sur la détection iPXE.
 
 ---
 
@@ -257,7 +259,7 @@ cat /var/www/html/install.ipxe
 
 #!ipxe
 set menu-timeout 30000
-set server_ip 192.168.1.187
+set server_ip IP_SERVEUR
 
 menu === Menu de déploiement réseau ===
 item --gap --        --- Ubuntu ---
