@@ -3,7 +3,8 @@
 ## Sommaire
 
 - [0. Avant-propos](#0-avant-propos)
-- [0.1 Ubuntu](#01-ubuntu)
+  - [0.1 Ubuntu](#01-ubuntu)
+  - [0.2 Debian](#02-debian)
 - [1. Configuration IP statique](#1-ip-statique-sur-le-serveur)
 - [2. Installation des paquets](#2-installation-des-paquets)
 - [3. Configuration TFTP](#3-configuration-tftp)
@@ -25,16 +26,18 @@ Je me suis donc tourner vers `Ubuntu Server` qui est beaucoup plus adapté pour 
 
 Il existe une solution spécifique à Ubuntu pour le déploiement qui est [MAAS](https://canonical.com/maas). Je n'ai pas eu le temps de l'étudier. 
 
-Il existe des solutions plus généralistes tel que [Foreman](https://theforeman.org/), qui est super bien documenté que j'ai pu tester un peu, il en existe encore d'autres. Ces solutions reposent généralement sur du boot PXE/iPXE combinés avec d'autres outils afin de donner une application tout en un prêt à l'emploi. Cependant j'ai opté pour une solution manuelle, car il faut passer beaucoup de temps à maitriser les applications, de plus ça permet de mieux comprendre le fonctionnement de l'architecture, d'avoir une solution légère et une maitrise de l'ensemble du processus de déploiement. 
+Il existe des solutions plus généralistes tel que [Foreman](https://theforeman.org/), qui est super bien documenté que j'ai pu tester un peu, il en existe encore d'autres. Ces solutions reposent généralement sur du boot PXE/iPXE combinés avec d'autres outils afin de donner une application tout en un prêt à l'emploi.
 
-### 0.1 Debian
+Cependant j'ai opté pour une solution manuelle, car il faut passer beaucoup de temps à maitriser les applications comme Foreman, de plus ça permet de mieux comprendre le fonctionnement de l'architecture, d'avoir une solution légère et une maitrise de l'ensemble du processus de déploiement. 
+
+### 0.2 Debian
 Debian est bien réputé et facile à configurer pour le déploiement automatisé, il suffit d'extraire le **kernel** et l'**initrd** de l'iso [netboot](http://ftp.debian.org/debian/dists/stable/main/installer-amd64/current/images/netboot/) et de le faire télécharger aux clients PXE/iPXE, pour un total de 50Mo par poste. Cela va drastiquement réduire la charge réseau de la liaison WAN entre les LAN des postes de formation et le serveur qui se trouvera sur le site distant. (En comparaison avec Ubuntu qui devra faire télécharger environ 2.5Go par poste).
 
 De plus, le déploiement automatisé de Debian est beaucoup mieux documenté donc plus facile à mettre en oeuvre. Si on veut éviter une solution manuelle, il faudra se diriger vers des solutions "SaaS" tel que Foreman, qu'on a cité juste avant, et d'autres encore.
 
 ## 1. IP statique sur le serveur
 
-Sur les versions récentes de Debian c'est Network Manager qui est utilisé par défaut, voici comment mettre des paramètres IP statiques avec Network Manager
+J'utilise un Debian 13 pour mon serveur, les versions récentes de Debian utilisent Network Manager par défaut pour la gestion du réseau, voici comment mettre des paramètres IP statiques avec Network Manager. Sinon il est possible de désactiver Network Manager et de modifier le fichier `/etc/network/interfaces`.
 ```bash
 nmcli device show
 
@@ -65,6 +68,8 @@ apt install tftpd-hpa apache2 wget dnsmasq
 ---
 
 ## 3. Configuration TFTP
+
+Les clients PXE récupéreront le bootloader iPXE via TFTP. Rappelons que dans l'architecture finale, ce serveur TFTP se trouvera sur un site distant.
 
 Modifier `/etc/default/tftpd-hpa` :
 
@@ -118,45 +123,57 @@ mkdir -p /var/www/html/tftpboot
 ln -s /srv/tftp/ /var/www/html/tftpboot/
 ```
 
-> Le fichier iPXE sera installé à la racine du serveur sous le nom `install.ipxe`.
+Ce qui se trouvera dans le répertoire `/srv/tftp/` sera aussi dans le répertoire `/var/www/html/tftpboot/tftp/`
 
 ---
 
 ## 6. Récupération de l'ISO
 
-### 6.1 Ubuntu
+### 6.1 Ubuntu Server
 
+Télécharger l'iso Ubuntu Server
 ```bash
+mkdir /var/www/html/ubuntu
+cd /var/www/html/ubuntu
 wget https://releases.ubuntu.com/releases/resolute/ubuntu-26.04-live-server-amd64.iso
 ```
+Lien à adapter selon la version souhaitée. Voir [ici](https://releases.ubuntu.com/)
 
-Monter l'ISO et copier les fichiers suivants dans le répertoire `/srv/tftp/ubuntu` :
-
+Monter l'ISO et copier les fichiers suivants **initrd** et **kernel** dans le répertoire `/srv/tftp/ubuntu` :
 ```bash
-mkdir /mnt/ubuntu-iso
-mount -o loop /chemin/vers/fichier/ubuntu-26.04-live-server-amd64.iso /mnt/ubuntu-iso/
-```
+mount -o loop /var/www/html/ubuntu/ubuntu-26.04-live-server-amd64.iso /mnt/
 
-```bash
-ls /mnt/ubuntu-iso/
+ls /mnt/
 boot  boot.catalog  casper  dists  EFI  md5sum.txt  pool  ubuntu
 ```
 
 ```bash
 mkdir /srv/tftp/ubuntu
-cp /mnt/ubuntu-iso/casper/{initrd,vmlinuz} /srv/tftp/ubuntu/
-umount /mnt/ubuntu-iso
-
-cp /chemin/vers/fichier/ubuntu-26.04-live-server-amd64.iso /var/www/html/ubuntu-server.iso
+cp /mnt/casper/{initrd,vmlinuz} /srv/tftp/ubuntu/
+umount /mnt/
 ```
 
+Renommer le fichier iso ubuntu (facultatif)
+```bash
+mv /var/www/html/ubuntu/ubuntu-26.04-live-server-amd64.iso /var/www/html/ubuntu/ubuntu-server.iso
+```
+
+### 6.2 Debian
+
+```bash
+mkdir /var/www/html/debian
+cd /var/www/html/debian
+wget http://ftp.debian.org/debian/dists/stable/main/installer-amd64/current/images/netboot/netboot.tar.gz
+tar -xzf netboot.tar.gz```
 ---
+
+Les fichiers qui vont nous intéresser pour la suite sont dans le répertoire `/var/www/html/debian/debian-installer/amd64/`
 
 ## 7. Configuration DHCP (dnsmasq)
 
 Pour Réseau Canopé la configuration devra se faire sur les firewall Stormshield, pour indiquer aux clients qui bootent sur le réseau l'option 066 (next-server) qui sera le serveur TFTP à contacter et l'option 067 (filename) le fichier de boot à récupérer. Il faudra donner le bon fichier de boot selon si l'ordinateur client est en UEFI ou BIOS.
 
-Cependant pour le PoC local c'est le serveur PXE/iPXE lui même qui gérait cela via `dnsmasq`, c'est aussi possible avec `isc-dhcp-server`.
+Cependant pour le PoC local c'est le serveur PXE/iPXE lui même qui gère cela via `dnsmasq`, c'est aussi possible avec `isc-dhcp-server`.
 
 Fichier `/etc/dnsmasq.d/pxe.conf` :
 
@@ -287,7 +304,7 @@ choose --timeout ${menu-timeout} --default server target && goto ${target}
 :server
 kernel http://${server_ip}/tftpboot/tftp/ubuntu/vmlinuz
 initrd http://${server_ip}/tftpboot/tftp/ubuntu/initrd
-imgargs vmlinuz root=/dev/ram0 ramdisk_size=1500000 ip=dhcp url=http://${server_ip}/ubuntu-server.iso autoinstall ds=nocloud-net;s=http://${server_ip}/autoinstall/ cloud-config-url=/dev/null
+imgargs vmlinuz root=/dev/ram0 ramdisk_size=1500000 ip=dhcp url=http://${server_ip}/ubuntu/ubuntu-server.iso autoinstall ds=nocloud-net;s=http://${server_ip}/autoinstall/ cloud-config-url=/dev/null
 boot
 
 :shell
