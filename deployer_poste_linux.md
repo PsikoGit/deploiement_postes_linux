@@ -22,6 +22,8 @@ Pour déployer du Ubuntu on peut soit déployer un `Ubuntu Desktop` soit un `Ubu
 
 Je me suis donc tourner vers `Ubuntu Server` qui est beaucoup plus adapté pour le déploiement automatisé, il faudra cependant construire à la main l'environnement Desktop. Voir plus en détail toute la section 8 [Ici](#8-autoinstall--user-data)
 
+Il existe d'autres solutions pour le déploiement d'Ubuntu tel que MAAS
+
 ### 0.1 Debian
 Debian est beaucoup plus adapté et facile à configurer pour le déploiement automatisé, il suffit d'extraire le **kernel** et l'**initrd** de l'iso 
 
