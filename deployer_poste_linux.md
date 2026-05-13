@@ -11,8 +11,8 @@
 - [4. Téléchargement des bootloaders iPXE](#4-téléchargement-des-bootloaders-ipxe)
 - [5. Installation du serveur web](#5-serveur-web-pour-ipxe)
 - [6. Montage et copie de l'ISO](#6-récupération-de-liso)
-  - [6.1 ISO Ubuntu Server](#61-ubuntu-server)
-  - [6.2 ISO Debian](#62-debian)
+  - [6.1 ISO Ubuntu Server](#61-iso-ubuntu-server)
+  - [6.2 ISO Debian](#62-iso-debian)
 - [7. Configuration DHCP](#7-configuration-dhcp-dnsmasq)
 - [8. Automatisation des questions](#8-automatisation)
     - [8.1 Automatisation Ubuntu](#81-automatisation-ubuntu)
@@ -133,7 +133,7 @@ Ce qui se trouvera dans le répertoire `/srv/tftp/` sera aussi dans le répertoi
 
 ## 6. Récupération de l'ISO
 
-### 6.1 Ubuntu Server
+### 6.1 ISO Ubuntu Server
 
 Télécharger l'iso Ubuntu Server
 ```bash
@@ -162,7 +162,7 @@ Renommer le fichier iso ubuntu (facultatif)
 mv /var/www/html/ubuntu/ubuntu-26.04-live-server-amd64.iso /var/www/html/ubuntu/ubuntu-server.iso
 ```
 
-### 6.2 Debian
+### 6.2 ISO Debian
 
 ```bash
 mkdir /var/www/html/debian
