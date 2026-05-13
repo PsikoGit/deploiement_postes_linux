@@ -12,7 +12,9 @@
 - [5. Installation du serveur web](#5-serveur-web-pour-ipxe)
 - [6. Montage et copie de l'ISO](#6-récupération-de-liso)
 - [7. Configuration DHCP](#7-configuration-dhcp-dnsmasq)
-- [8. Automatisation via cloud-config](#8-autoinstall--user-data)
+- [8. Automatisation des questions](#8-automatisation)
+    - [8.1 Automatisation Ubuntu](#81-automatisation-ubuntu)
+    - [8.2 Automatisation Debian](#81-automatisation-debian)
 - [9. Fichier iPXE](#9-fichier-installipxe)
 
 ---
@@ -164,14 +166,16 @@ mv /var/www/html/ubuntu/ubuntu-26.04-live-server-amd64.iso /var/www/html/ubuntu/
 mkdir /var/www/html/debian
 cd /var/www/html/debian
 wget http://ftp.debian.org/debian/dists/stable/main/installer-amd64/current/images/netboot/netboot.tar.gz
-tar -xzf netboot.tar.gz```
----
+tar -xzf netboot.tar.gz
+```
 
 Les fichiers qui vont nous intéresser pour la suite sont dans le répertoire `/var/www/html/debian/debian-installer/amd64/`
 
+---
+
 ## 7. Configuration DHCP (dnsmasq)
 
-Pour Réseau Canopé la configuration devra se faire sur les firewall Stormshield, pour indiquer aux clients qui bootent sur le réseau l'option 066 (next-server) qui sera le serveur TFTP à contacter et l'option 067 (filename) le fichier de boot à récupérer. Il faudra donner le bon fichier de boot selon si l'ordinateur client est en UEFI ou BIOS.
+Pour l'infrastructure finale, la configuration devra se faire sur les firewall Stormshield, pour indiquer aux clients qui bootent sur le réseau l'option 066 (next-server) qui sera le serveur TFTP à contacter et l'option 067 (filename) le fichier de boot à récupérer. Il faudra donner le bon fichier de boot selon si l'ordinateur client est en UEFI ou BIOS.
 
 Cependant pour le PoC local c'est le serveur PXE/iPXE lui même qui gère cela via `dnsmasq`, c'est aussi possible avec `isc-dhcp-server`.
 
@@ -227,7 +231,9 @@ Il y a plusieurs manières et syntaxes d'écrire le fichier pour reproduire le m
 
 ---
 
-## 8. Autoinstall — user-data
+## 8. Automatisation
+
+### 8.1 Automatisation Ubuntu
 
 Comme l'idée est d'avoir une installation automatique, on va utiliser le mécanisme de cloud-config, spécifique aux distributions Ubuntu. Le fichier `user-data` permet de répondre automatiquement aux questions normalement posés lors de l'installation Ubuntu. C'est le même principe que `preseed` pour Debian.
 
@@ -274,7 +280,7 @@ autoinstall:
 
 Ce fichier comporte énorméments d'options et il est possible de faire beaucoup de choses, comme exécuter des commandes Linux après installation (documentation:https://blog.stephane-robert.info/docs/cloud/cloud-init/). Au niveau des packages on peut installer ce qu'on veut et adapter, cependant, j'ai essayé d'installer des paquets comme `ubuntu-mate-desktop`, `ubuntu-desktop` et `ubuntu-desktop-minimal` mais ça ne fonctionnait pas. 
 
-L'hypothèse est que ces paquets sont beaucoup trop lourd et dépendent certainements d'autres paquets d'Ubuntu Desktop. Ce n'est pas adapté pour une installation automatique réseau, il faudra donc installer à la main un environnement Ubuntu Desktop complet, ce qui peut-être assez compliqué. Cependant ça évite d'avoir des choses dont on a pas besoin et d'alléger la configuration.
+L'hypothèse est que ces paquets sont beaucoup trop lourd et dépendent certainements d'autres utilitaires d'Ubuntu Desktop. Ce n'est pas adapté pour une installation automatique réseau, il faudra donc installer à la main un environnement Ubuntu Desktop complet (ce que j'ai commencé dans la liste `packages` du fichier user-data). C'est pas très propre et c'est assez compliqué, cependant ça évite d'avoir des choses dont on a pas besoin et ça allège la configuration.
 
 
 Fichier vide mais nécessaire au fonctionnement de cloud-init.
@@ -284,8 +290,60 @@ touch /var/www/html/autoinstall/meta-data
 
 ---
 
+### 8.2 Automatisation Debian
+
+Debian utilise le mécanisme preseed pour automatiser la réponse aux questions posés lors de l'installation de l'OS, la documentation est très bien rédigé [Ici](https://www.debian.org/releases/stable/amd64/apb.fr.html). Voici un exemple de fichier preseed [Ici](https://www.debian.org/releases/stable/example-preseed.txt).
+
+```bash
+nano /var/www/html/debian/preseed.cfg
+```
+
+```bash
+d-i debian-installer/locale string fr_FR
+
+d-i keyboard-configuration/xkb-keymap select fr
+d-i console-setup/ask_detect boolean false
+d-i console-setup/layoutcode string fr
+
+d-i netcfg/choose_interface select auto
+d-i netcfg/hostname string rechidov-test
+d-i netcfg/get_domain string
+
+d-i auto-install/enable boolean true
+d-i debconf/priority string critical
+
+d-i partman-auto/method string regular
+d-i partman-auto/choose_recipe select atomic
+
+d-i partman-lvm/device_remove_lvm boolean true
+d-i partman-md/device_remove_md boolean true
+
+d-i partman-basicfilesystems/no_swap boolean true
+
+d-i partman-partitioning/confirm_write_new_label boolean true
+d-i partman/choose_partition select finish
+d-i partman/confirm boolean true
+d-i partman/confirm_nooverwrite boolean true
+
+d-i passwd/root-login boolean true
+d-i passwd/root-password-crypted password HASH_À_GÉNÉRER
+
+d-i passwd/user-fullname string soulim
+d-i passwd/username string soulim
+d-i passwd/user-password-crypted password HASH_À_GÉNÉRER
+
+tasksel tasksel/first multiselect standard, gnome-desktop
+
+d-i hw-detect/load_firmware boolean true
+
+d-i finish-install/reboot_in_progress note
+```
+
+Pour des raisons de sécurité on ne va pas stocker les mots de passes en clair, il faudra générer le hash du mot de passe via la commande `mkpasswd -m sha-512` du paquet `whois`. Puis copier le résultat à la place de `HASH_À_GÉNÉRER`.  
+
 ## 9. Fichier install.ipxe
 
+C'est le fichier final qui sera exécuté par les clients iPXE. Il faudra adapter le fichier pour que ça choisisse une des distributions automatiquement selon ce qu'il sera choisit. Ici je laisse les 2 pour montrer la configuration.
 ```bash
 cat /var/www/html/install.ipxe
 
@@ -295,13 +353,20 @@ set server_ip IP_SERVEUR
 
 menu === Menu de déploiement réseau ===
 item --gap --        --- Ubuntu ---
-item server          Ubuntu
+item ubuntu          Ubuntu
+item debian	         Debian
 item --gap --        --- Outils ---
 item shell           Shell iPXE
 item exit            Booter sur le disque local
 choose --timeout ${menu-timeout} --default server target && goto ${target}
 
-:server
+:debian
+kernel http://${server_ip}/debian/debian-installer/amd64/linux
+initrd http://${server_ip}/debian/debian-installer/amd64/initrd.gz
+imgargs linux auto=true priority=critical url=http://${server_ip}/debian/preseed.cfg ip=dhcp ---
+boot
+
+:ubuntu
 kernel http://${server_ip}/tftpboot/tftp/ubuntu/vmlinuz
 initrd http://${server_ip}/tftpboot/tftp/ubuntu/initrd
 imgargs vmlinuz root=/dev/ram0 ramdisk_size=1500000 ip=dhcp url=http://${server_ip}/ubuntu/ubuntu-server.iso autoinstall ds=nocloud-net;s=http://${server_ip}/autoinstall/ cloud-config-url=/dev/null
