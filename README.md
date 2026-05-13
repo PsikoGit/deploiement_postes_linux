@@ -46,4 +46,4 @@ La solution retenue repose sur une **architecture centralisée avec un serveur d
 
 | Document | Description |
 |---|---|
-| [Déployer des postes Ubuntu avec serveur local](deployer_postes_ubuntu.md) | Configuration du serveur PXE/iPXE local pour déployer automatiquement des postes Ubuntu à distance |
+| [Déployer des postes Ubuntu/Debian avec serveur local](deployer_postes_linux.md) | Configuration du serveur PXE/iPXE local pour déployer automatiquement des postes Ubuntu/Debian à distance |
