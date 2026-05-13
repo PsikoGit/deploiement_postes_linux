@@ -1,4 +1,4 @@
-# Configuration PXE / iPXE — Déploiement réseau Ubuntu
+# Configuration PXE / iPXE — Déploiement réseau Ubuntu et Debian
 
 ## Sommaire
 
@@ -8,7 +8,7 @@
 - [3. Configuration TFTP](#3-configuration-tftp)
 - [4. Téléchargement des bootloaders iPXE](#4-téléchargement-des-bootloaders-ipxe)
 - [5. Installation du serveur web](#5-serveur-web-pour-ipxe)
-- [6. Montage et copie de l'ISO](#6-récupération-de-liso-ubuntu)
+- [6. Montage et copie de l'ISO](#6-récupération-de-liso)
 - [7. Configuration DHCP](#7-configuration-dhcp-dnsmasq)
 - [8. Automatisation via cloud-config](#8-autoinstall--user-data)
 - [9. Fichier iPXE](#9-fichier-installipxe)
@@ -17,9 +17,13 @@
 
 ## 0. Avant-propos
 
-Pour déployer du Ubuntu on peut soit déployer un `Ubuntu Desktop` soit un `Ubuntu Server`, le problème d'Ubuntu Desktop est que l'iso à télécharger fait **5 Go** voir plus selon les versions, c'est beaucoup trop lourd à télécharger. En faisant des recherches il est apparement possible de déployer du Ubuntu Desktop en faisant télécharger aux PC seulement le **kernel**, **l'initrd** et un fichier **squashfs**, le tout pour un total de **1,5 Go** environ ce qui allège beaucoup. J'ai essayer de faire cette solution mais ça n'a pas fonctionner pour moi, j'ai eu des erreurs de type `Unable to find a live system on the network`, etc...
+### 0.1 Ubuntu
+Pour déployer du Ubuntu on peut soit déployer un `Ubuntu Desktop` soit un `Ubuntu Server`, le problème d'Ubuntu Desktop est que l'iso à télécharger fait **5 Go** voir plus selon les versions, c'est beaucoup trop lourd à télécharger. En faisant des recherches il est apparement possible de déployer du Ubuntu Desktop en faisant télécharger aux PC seulement le **kernel**, **l'initrd** et un fichier **squashfs**, le tout pour un total de **1,5 Go** environ ce qui allège beaucoup. J'ai essayer de faire cette solution mais ça n'a pas fonctionner pour moi, j'ai eu des erreurs de type `Unable to find a live system on the network` au moment du poot iPXE client.
 
 Je me suis donc tourner vers `Ubuntu Server` qui est beaucoup plus adapté pour le déploiement automatisé, il faudra cependant construire à la main l'environnement Desktop. Voir plus en détail toute la section 8 [Ici](#8-autoinstall--user-data)
+
+### 0.1 Debian
+Debian est beaucoup plus adapté et facile à configurer pour le déploiement automatisé, il suffit d'extraire le **kernel** et l'**initrd** de l'iso 
 
 ## 1. IP statique sur le serveur
 
@@ -111,7 +115,9 @@ ln -s /srv/tftp/ /var/www/html/tftpboot/
 
 ---
 
-## 6. Récupération de l'ISO Ubuntu
+## 6. Récupération de l'ISO
+
+### 6.1 Ubuntu
 
 ```bash
 wget https://releases.ubuntu.com/releases/resolute/ubuntu-26.04-live-server-amd64.iso
@@ -127,7 +133,9 @@ mount -o loop /chemin/vers/fichier/ubuntu-26.04-live-server-amd64.iso /mnt/ubunt
 ```bash
 ls /mnt/ubuntu-iso/
 boot  boot.catalog  casper  dists  EFI  md5sum.txt  pool  ubuntu
+```
 
+```bash
 mkdir /srv/tftp/ubuntu
 cp /mnt/ubuntu-iso/casper/{initrd,vmlinuz} /srv/tftp/ubuntu/
 umount /mnt/ubuntu-iso
