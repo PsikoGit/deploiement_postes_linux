@@ -3,6 +3,7 @@
 ## Sommaire
 
 - [0. Avant-propos](#0-avant-propos)
+- [0.1 Ubuntu](#01-ubuntu)
 - [1. Configuration IP statique](#1-ip-statique-sur-le-serveur)
 - [2. Installation des paquets](#2-installation-des-paquets)
 - [3. Configuration TFTP](#3-configuration-tftp)
