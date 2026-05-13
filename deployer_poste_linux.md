@@ -11,6 +11,8 @@
 - [4. Téléchargement des bootloaders iPXE](#4-téléchargement-des-bootloaders-ipxe)
 - [5. Installation du serveur web](#5-serveur-web-pour-ipxe)
 - [6. Montage et copie de l'ISO](#6-récupération-de-liso)
+  - [6.1 ISO Ubuntu Server](#61-ubuntu-server)
+  - [6.2 ISO Debian](#62-debian)
 - [7. Configuration DHCP](#7-configuration-dhcp-dnsmasq)
 - [8. Automatisation des questions](#8-automatisation)
     - [8.1 Automatisation Ubuntu](#81-automatisation-ubuntu)
