@@ -18,14 +18,18 @@
 ## 0. Avant-propos
 
 ### 0.1 Ubuntu
-Pour déployer du Ubuntu on peut soit déployer un `Ubuntu Desktop` soit un `Ubuntu Server`, le problème d'Ubuntu Desktop est que l'iso à télécharger fait **5 Go** voir plus selon les versions, c'est beaucoup trop lourd à télécharger. En faisant des recherches il est apparement possible de déployer du Ubuntu Desktop en faisant télécharger aux PC seulement le **kernel**, **l'initrd** et un fichier **squashfs**, le tout pour un total de **1,5 Go** environ ce qui allège beaucoup. J'ai essayer de faire cette solution mais ça n'a pas fonctionner pour moi, j'ai eu des erreurs de type `Unable to find a live system on the network` au moment du poot iPXE client.
+Pour déployer du Ubuntu on peut soit déployer un `Ubuntu Desktop` soit un `Ubuntu Server`, le problème d'Ubuntu Desktop est que l'iso à télécharger fait **5 Go** voir plus selon les versions, c'est beaucoup trop lourd à télécharger. En faisant des recherches il est apparement possible de déployer du Ubuntu Desktop en faisant télécharger aux PC seulement le **kernel**, **l'initrd** et un fichier **squashfs**, le tout pour un total de **1,5 Go** environ ce qui allège beaucoup. J'ai essayer d'utiliser cette solution mais ça n'a pas fonctionner pour moi, j'ai eu des erreurs de type `Unable to find a live system on the network` au moment du poot iPXE client.
 
 Je me suis donc tourner vers `Ubuntu Server` qui est beaucoup plus adapté pour le déploiement automatisé, il faudra cependant construire à la main l'environnement Desktop. Voir plus en détail toute la section 8 [Ici](#8-autoinstall--user-data)
 
-Il existe d'autres solutions pour le déploiement d'Ubuntu tel que MAAS
+Il existe une solution spécifique à Ubuntu pour le déploiement qui est [MAAS](https://canonical.com/maas). Je n'ai pas eu le temps de l'étudier. 
+
+Il existe des solutions plus généralistes tel que [Foreman](https://theforeman.org/), qui est super bien documenté que j'ai pu tester un peu, il en existe encore d'autres. Ces solutions reposent généralement sur du boot PXE/iPXE combinés avec d'autres outils afin de donner une application tout en un prêt à l'emploi. Cependant j'ai opté pour une solution manuelle, car il faut passer beaucoup de temps à maitriser les applications, de plus ça permet de mieux comprendre le fonctionnement de l'architecture, d'avoir une solution légère et une maitrise de l'ensemble du processus de déploiement. 
 
 ### 0.1 Debian
-Debian est beaucoup plus adapté et facile à configurer pour le déploiement automatisé, il suffit d'extraire le **kernel** et l'**initrd** de l'iso 
+Debian est bien réputé et facile à configurer pour le déploiement automatisé, il suffit d'extraire le **kernel** et l'**initrd** de l'iso [netboot](http://ftp.debian.org/debian/dists/stable/main/installer-amd64/current/images/netboot/) et de le faire télécharger aux clients PXE/iPXE, pour un total de 50Mo par poste. Cela va drastiquement réduire la charge réseau de la liaison WAN entre les LAN des postes de formation et le serveur qui se trouvera sur le site distant. (En comparaison avec Ubuntu qui devra faire télécharger environ 2.5Go par poste).
+
+De plus, le déploiement automatisé de Debian est beaucoup mieux documenté donc plus facile à mettre en oeuvre. Si on veut éviter une solution manuelle, il faudra se diriger vers des solutions "SaaS" tel que Foreman, qu'on a cité juste avant, et d'autres encore.
 
 ## 1. IP statique sur le serveur
 
