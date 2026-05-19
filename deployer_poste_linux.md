@@ -1,5 +1,8 @@
 # Configuration PXE / iPXE — Déploiement réseau Ubuntu et Debian
 
+Architecture lors de la rédaction de cette documentation, phase de test avant de déployer le serveur à distance.
+<img src="images/Image1.png" width="500" height="500" />
+
 ## Sommaire
 
 - [0. Avant-propos](#0-avant-propos)
