@@ -357,7 +357,8 @@ Pour des raisons de sécurité on ne va pas stocker les mots de passes en clair,
 
 ## 9. Fichier install.ipxe
 
-C'est le fichier final qui sera exécuté par les clients iPXE. Il faudra adapter le fichier pour que ça choisisse une des distributions automatiquement. Ici je laisse les 2 pour montrer la configuration.
+C'est le fichier final qui sera exécuté par les clients iPXE. Il faudra adapter le fichier pour que ça choisisse une des distributions automatiquement. Ici je laisse les 2 pour montrer la configuration. Il est possible de définir des variables dans le fichier iPXE et d'y accéder dans le fichier preseed, ce qui peut-être très puissant.
+
 ```bash
 cat /var/www/html/install.ipxe
 
