@@ -44,7 +44,7 @@ Debian est bien réputé et facile à configurer pour le déploiement automatis�
 De plus, le déploiement automatisé de Debian est beaucoup mieux documenté donc plus facile à mettre en oeuvre. Si on veut éviter une solution manuelle, il faudra se diriger vers des solutions "SaaS" tel que Foreman, qu'on a cité juste avant, et d'autres encore.
 
 ### 0.3 BIOS
-Ma documentation part du principe que dans le parc informatique, il y a des PC en UEFI et en BIOS/Legacy à la fois. Si tout votre parc informatique est en UEFI moderne, il est recommandé de booter directement via HTTP/HTTPS en évitant la première étape TFTP, car c'est plus sûr et plus rapide. Je rédigerai peut-être une documentation dans le cas où tout le parc est en UEFI moderne. Le UEFI HTTP boot réduit l'intérêt d'utiliser la technologie iPXE, mais iPXE reste quand même plus puissant car : scripting avancé, menus dynamiques, logique complexe, etc...
+Ma documentation part du principe que dans le parc informatique, il y a des PC en UEFI et en BIOS/Legacy à la fois. Si tout votre parc informatique est en UEFI moderne, il est recommandé de booter directement via HTTP/HTTPS en évitant la première étape TFTP, car c'est plus sûr et plus rapide, BIOS/Legacy ne permet pas de booter directement via HTTP/HTTPS. Je rédigerai peut-être une documentation dans le cas où tout le parc est en UEFI moderne. Le UEFI HTTP boot réduit l'intérêt d'utiliser la technologie iPXE, mais iPXE reste quand même plus puissant car : scripting avancé, menus dynamiques, logique complexe, etc...
 
 ## 1. IP statique sur le serveur
 
