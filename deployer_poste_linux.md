@@ -5,6 +5,7 @@
 - [0. Avant-propos](#0-avant-propos)
   - [0.1 Ubuntu](#01-ubuntu)
   - [0.2 Debian](#02-debian)
+  - [0.3 BIOS](#03-bios)
 - [1. Configuration IP statique](#1-ip-statique-sur-le-serveur)
 - [2. Installation des paquets](#2-installation-des-paquets)
 - [3. Configuration TFTP](#3-configuration-tftp)
@@ -35,9 +36,12 @@ Il existe des solutions plus généralistes tel que [Foreman](https://theforeman
 Cependant j'ai opté pour une solution manuelle, car il faut passer beaucoup de temps à maitriser les applications comme Foreman, de plus ça permet de mieux comprendre le fonctionnement de l'architecture, d'avoir une solution légère et une maitrise de l'ensemble du processus de déploiement. 
 
 ### 0.2 Debian
-Debian est bien réputé et facile à configurer pour le déploiement automatisé, il suffit d'extraire le **kernel** et l'**initrd** de l'iso [netboot](http://ftp.debian.org/debian/dists/stable/main/installer-amd64/current/images/netboot/) et de le faire télécharger aux clients PXE/iPXE, pour un total de 50Mo par poste. Cela va drastiquement réduire la charge réseau de la liaison WAN entre les LAN des postes de formation et le serveur qui se trouvera sur le site distant. (En comparaison avec Ubuntu qui devra faire télécharger environ 2.5Go par poste).
+Debian est bien réputé et facile à configurer pour le déploiement automatisé, il suffit d'extraire le **kernel** et l'**initrd** de l'iso [netboot](http://ftp.debian.org/debian/dists/stable/main/installer-amd64/current/imaréduiges/netboot/) et de le faire télécharger aux clients PXE/iPXE, pour un total de 50Mo par poste. Cela va drastiquement réduire la charge réseau de la liaison WAN entre les LAN des postes de formation et le serveur qui se trouvera sur le site distant. (En comparaison avec Ubuntu qui devra faire télécharger environ 2.5Go par poste).
 
 De plus, le déploiement automatisé de Debian est beaucoup mieux documenté donc plus facile à mettre en oeuvre. Si on veut éviter une solution manuelle, il faudra se diriger vers des solutions "SaaS" tel que Foreman, qu'on a cité juste avant, et d'autres encore.
+
+### 0.3 BIOS
+Ma documentation part du principe que dans le parc informatique, il y a des PC en UEFI et en BIOS/Legacy à la fois. Si tout votre parc informatique est en UEFI moderne, il est possible de booter directement via HTTP/HTTPS en évitant la première étape TFTP, ce qui permet d'être plus rapide. Je rédigerai peut-être une documentation dans le cas où tout le parc est en UEFI moderne. Le UEFI HTTP boot réduit l'intérêt d'utiliser la technologie iPXE, mais iPXE reste quand même plus puissant car : scripting avancé, menus dynamiques, logique complexe, etc...
 
 ## 1. IP statique sur le serveur
 
@@ -177,9 +181,14 @@ Les fichiers qui vont nous intéresser pour la suite sont dans le répertoire `/
 
 ## 7. Configuration DHCP (dnsmasq)
 
-Pour l'infrastructure finale, la configuration devra se faire sur le serveur DHCP local, pour indiquer aux clients qui bootent sur le réseau l'option 066 (next-server) qui sera le serveur TFTP à contacter et l'option 067 (filename) le fichier de boot à récupérer. Il faudra donner le bon fichier de boot selon si l'ordinateur client est en UEFI ou BIOS.
+Pour l'infrastructure finale, la configuration devra soit se faire sur le serveur DHCP local de chaque LAN, pour indiquer aux clients PXE **l'option 066 (next-server)** qui sera le serveur TFTP à contacter et **l'option 067 (filename)** le bootloader à récupérer. Si l'équipement qui gère le DHCP dans le réseau local ne permet pas de spécifier les options 066 et 067 aux clients DHCP, ou qu'il ne permet pas de différencier entre les clients UEFI et BIOS, il y a 2 solutions :
 
-Cependant pour le PoC local que j'effectue actuellement, c'est le serveur PXE/iPXE lui même qui gère cela via `dnsmasq`, c'est aussi possible avec `isc-dhcp-server`.
+- Mettre en place un serveur ProxyDHCP dans chaque LAN pour que ce serveur donne les options 066 et 067 aux clients PXE. Ce qui nécessite un serveur à maintenir par LAN.
+- Pour éviter un serveur à maintenir par LAN : faire un helper address sur le serveur DHCP déjà présent de chaque LAN pour rediriger les requêtes des clients DHCP vers un serveur ProxyDHCP distant, afin que lui donne les options 066 et 067.   
+
+Il faudra donner le bon bootloader selon si l'ordinateur client est en UEFI ou BIOS.
+
+Cependant pour le PoC local que j'effectue actuellement, c'est le serveur PXE/iPXE lui même qui gère cela via `dnsmasq`, c'est aussi possible avec `isc-dhcp-server`. J'utilise donc la solution ProxyDHCP local, mon serveur iPXE sera un serveur DHCP qui indiquera uniquement l'option 066 et 067 aux clients PXE :
 
 Fichier `/etc/dnsmasq.d/pxe.conf` :
 
