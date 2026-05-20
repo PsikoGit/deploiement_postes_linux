@@ -33,7 +33,7 @@ Architecture prévue à la fin.
 ## 0. Avant-propos
 
 ### 0.1 Ubuntu
-Pour déployer du Ubuntu on peut soit déployer un `Ubuntu Desktop` soit un `Ubuntu Server`, le problème d'Ubuntu Desktop est que l'iso à télécharger fait **5 Go** voir plus selon les versions, c'est beaucoup trop lourd à télécharger. En faisant des recherches il est apparement possible de déployer du Ubuntu Desktop en faisant télécharger aux PC seulement le **kernel**, **l'initrd** et un fichier **squashfs**, le tout pour un total de **1,5 Go** environ ce qui allège beaucoup. J'ai essayer d'utiliser cette solution mais ça n'a pas fonctionner pour moi, j'ai eu des erreurs de type `Unable to find a live system on the network` au moment du poot iPXE client.
+Pour déployer du Ubuntu on peut soit déployer un `Ubuntu Desktop` soit un `Ubuntu Server`, le problème d'Ubuntu Desktop est que l'iso à télécharger fait **5 Go** voir plus selon les versions, c'est beaucoup trop lourd à télécharger. En faisant des recherches il est apparement possible de déployer du Ubuntu Desktop en faisant télécharger aux PC seulement le **kernel**, **l'initrd** et un fichier **squashfs**, le tout pour un total de **1,5 Go** environ ce qui allège beaucoup. J'ai essayer d'utiliser cette solution mais ça n'a pas fonctionner pour moi, j'ai eu des erreurs de type `Unable to find a live system on the network` au moment du boot iPXE client.
 
 Je me suis donc tourner vers `Ubuntu Server` qui est beaucoup plus adapté pour le déploiement automatisé, il faudra cependant construire à la main l'environnement Desktop. Voir plus en détail toute la section 8 [Ici](#8-autoinstall--user-data)
 
