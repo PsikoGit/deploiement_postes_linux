@@ -14,7 +14,6 @@ Architecture prévue à la fin.
 - [0. Avant-propos](#0-avant-propos)
   - [0.1 Ubuntu](#01-ubuntu)
   - [0.2 Debian](#02-debian)
-  - [0.3 BIOS](#03-bios)
 - [1. Configuration IP statique](#1-ip-statique-sur-le-serveur)
 - [2. Installation des paquets](#2-installation-des-paquets)
 - [3. Configuration TFTP](#3-configuration-tftp)
@@ -48,9 +47,6 @@ Cependant j'ai opté pour une solution manuelle, car il faut passer beaucoup de 
 Debian est bien réputé et facile à configurer pour le déploiement automatisé, il suffit d'extraire le **kernel** et l'**initrd** de l'iso [netboot](http://ftp.debian.org/debian/dists/stable/main/installer-amd64/current/imaréduiges/netboot/) et de le faire télécharger aux clients PXE/iPXE, pour un total de 50Mo par poste. Cela va drastiquement réduire la charge réseau de la liaison WAN entre les LAN des postes de formation et le serveur qui se trouvera sur le site distant. (En comparaison avec Ubuntu qui devra faire télécharger environ 2.5Go par poste).
 
 De plus, le déploiement automatisé de Debian est beaucoup mieux documenté donc plus facile à mettre en oeuvre. Si on veut éviter une solution manuelle, il faudra se diriger vers des solutions "SaaS" tel que Foreman, qu'on a cité juste avant, et d'autres encore.
-
-### 0.3 BIOS
-Ma documentation part du principe que dans le parc informatique, il y a des PC en UEFI et en BIOS/Legacy à la fois. Si tout votre parc informatique est en UEFI moderne, il est recommandé de booter directement via HTTP/HTTPS en évitant la première étape TFTP, car c'est plus sûr et plus rapide, BIOS/Legacy ne permet pas de booter directement via HTTP/HTTPS. Je rédigerai peut-être une documentation dans le cas où tout le parc est en UEFI moderne. Le UEFI HTTP boot réduit l'intérêt d'utiliser la technologie iPXE, mais iPXE reste quand même plus puissant car : scripting avancé, menus dynamiques, logique complexe, etc...
 
 ## 1. IP statique sur le serveur
 
