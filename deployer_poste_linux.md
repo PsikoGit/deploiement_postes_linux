@@ -431,3 +431,55 @@ Puis utiliser un **script de pré-installation** pour injecter la valeur avec `s
 
 > La clé est que le YAML est rechargé **après** l'exécution du script de pré-installation.
 > La variable de nom d'hôte est stockée dans `/run/cloud-init/instance-data.json` lors de l'installation subiquity initiale.
+
+fichier script puppet : 
+
+mettre ça dans le late command :
+d-i preseed/late_command string \
+    in-target wget -q -O /tmp/puppet-bootstrap.sh http://192.168.1.187/scripts/puppet-bootstrap.sh ; \
+    in-target chmod +x /tmp/puppet-bootstrap.sh ; \
+    in-target /tmp/puppet-bootstrap.sh
+
+script puppet-bootstrap.sh : 
+
+root@rechidov:/var/www/html# cat scripts/puppet-bootstrap.sh
+#!/bin/bash
+set -euo pipefail
+
+PUPPET_SERVER="192.168.1.187"
+PUPPET_HOSTNAME="rechidov"
+
+# --- Récupération de l'adresse MAC et construction du hostname ---
+MAC=$(ip link show | awk '/ether/ {print $2}' | head -n1 | tr -d ':' | tail -c 9)
+HOSTNAME="rc-fo-${MAC,,}"  # ^^ pour mettre en majuscules
+
+# --- Appliquer le hostname ---
+echo "${HOSTNAME}" > /etc/hostname
+echo "127.0.1.1 ${HOSTNAME}" >> /etc/hosts
+hostname "${HOSTNAME}"
+
+# --- Permettre aux agents Puppet de pouvoir résoudre le hostname du PuppetServer ---
+if ! grep -q "${PUPPET_HOSTNAME}" /etc/hosts; then
+    echo "${PUPPET_SERVER} ${PUPPET_HOSTNAME}" >> /etc/hosts
+fi
+
+# --- 1. Installation depuis les dépôts Debian ---
+apt-get install -y puppet
+
+
+# --- 2. Configuration ---
+cat > /etc/puppet/puppet.conf << EOF
+[main]
+server      = ${PUPPET_HOSTNAME}
+certname    = $(hostname)
+runinterval = 30m
+EOF
+
+puppet agent --test --waitforcert 60 || true
+
+systemctl enable puppet
+systemctl start puppet
+
+echo "[puppet-bootstrap] Puppet Agent installé et configuré."
+
+root@rechidov:/var/www/html# 
