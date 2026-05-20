@@ -315,15 +315,24 @@ nano /var/www/html/debian/preseed.cfg
 ```
 
 ```bash
-d-i debian-installer/locale string fr_FR
+d-i debian-installer/locale string fr_FR.UTF-8
+d-i debian-installer/language string fr
+d-i debian-installer/country string FR
 
-d-i keyboard-configuration/xkb-keymap select fr
+d-i keyboard-configuration/xkb-keymap select fr(latin9)
 d-i console-setup/ask_detect boolean false
 d-i console-setup/layoutcode string fr
 
 d-i netcfg/choose_interface select auto
 d-i netcfg/hostname string rechidov-test
 d-i netcfg/get_domain string
+
+#peut-être mettre ça à la place si jamais le hostname marche pas
+#d-i netcfg/choose_interface select auto
+#d-i netcfg/hostname string rechidov-test
+#d-i netcfg/get_hostname string rechidov-test
+#d-i netcfg/get_domain string
+#d-i netcfg/disable_dhcp_hostname boolean true
 
 d-i auto-install/enable boolean true
 d-i debconf/priority string critical
@@ -353,6 +362,12 @@ tasksel tasksel/first multiselect standard, gnome-desktop
 d-i hw-detect/load_firmware boolean true
 
 d-i finish-install/reboot_in_progress note
+
+#pour la suite
+d-i preseed/late_command string \
+    in-target wget -q -O /tmp/puppet-bootstrap.sh http://192.168.1.187/scripts/puppet-bootstrap.sh ; \
+    in-target chmod +x /tmp/puppet-bootstrap.sh ; \
+    in-target /tmp/puppet-bootstrap.sh
 ```
 
 Pour des raisons de sécurité on ne va pas stocker les mots de passes en clair, il faudra générer le hash du mot de passe via la commande `mkpasswd -m sha-512` du paquet `whois`. Puis copier le résultat à la place de `HASH_À_GÉNÉRER`.  
