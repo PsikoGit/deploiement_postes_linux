@@ -25,7 +25,7 @@ Architecture prévue à la fin.
 - [7. Configuration DHCP](#7-configuration-dhcp-dnsmasq)
 - [8. Automatisation des questions](#8-automatisation)
     - [8.1 Automatisation Ubuntu](#81-automatisation-ubuntu)
-    - [8.2 Automatisation Debian](#81-automatisation-debian)
+    - [8.2 Automatisation Debian](#82-automatisation-debian)
 - [9. Fichier iPXE](#9-fichier-installipxe)
 
 ---
@@ -384,13 +384,13 @@ set menu-timeout 30000
 set server_ip IP_SERVEUR
 
 menu === Menu de déploiement réseau ===
-item --gap --        --- Ubuntu ---
+item --gap --        --- Linux ---
 item ubuntu          Ubuntu
 item debian	         Debian
 item --gap --        --- Outils ---
 item shell           Shell iPXE
 item exit            Booter sur le disque local
-choose --timeout ${menu-timeout} --default server target && goto ${target}
+choose --timeout ${menu-timeout} --default exit target && goto ${target}
 
 :debian
 kernel http://${server_ip}/debian/debian-installer/amd64/linux
@@ -432,16 +432,21 @@ Puis utiliser un **script de pré-installation** pour injecter la valeur avec `s
 > La clé est que le YAML est rechargé **après** l'exécution du script de pré-installation.
 > La variable de nom d'hôte est stockée dans `/run/cloud-init/instance-data.json` lors de l'installation subiquity initiale.
 
+--- 
+ 
 fichier script puppet : 
 
 mettre ça dans le late command :
+```bash
 d-i preseed/late_command string \
     in-target wget -q -O /tmp/puppet-bootstrap.sh http://192.168.1.187/scripts/puppet-bootstrap.sh ; \
     in-target chmod +x /tmp/puppet-bootstrap.sh ; \
     in-target /tmp/puppet-bootstrap.sh
+```
 
 script puppet-bootstrap.sh : 
 
+```bash
 root@rechidov:/var/www/html# cat scripts/puppet-bootstrap.sh
 #!/bin/bash
 set -euo pipefail
@@ -483,3 +488,4 @@ systemctl start puppet
 echo "[puppet-bootstrap] Puppet Agent installé et configuré."
 
 root@rechidov:/var/www/html# 
+```
