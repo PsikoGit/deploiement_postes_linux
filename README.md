@@ -42,6 +42,9 @@ La solution retenue repose sur une **architecture centralisée avec un serveur d
 
 ## Documentation
 
+À lire dans l'ordre :
+
 | Document | Description |
 |---|---|
 | [Déployer des postes Ubuntu/Debian avec serveur local](deployer_poste_linux.md) | Configuration du serveur PXE/iPXE local pour déployer automatiquement des postes Ubuntu/Debian à distance |
+| [Déployer Puppet automatiquement sur les postes](configuration_puppet8.md) | Faire en sorte que les PC clients soient enregistrées automatiquement auprès du serveur Puppet afin de reçevoir une configuration |
