@@ -197,7 +197,7 @@ Démarrer le PC client sur le réseau et tester.
 
 ## 5. Vérification côté client
 
-Une fois le client démarré, tester le bon fonctionnement de l'agent en tant que `root` :
+Une fois le client démarré, tester le bon fonctionnement de l'agent en tant que `root` sur le client :
 
 ```bash
 /opt/puppetlabs/bin/puppet agent --test
