@@ -362,12 +362,6 @@ tasksel tasksel/first multiselect standard, gnome-desktop
 d-i hw-detect/load_firmware boolean true
 
 d-i finish-install/reboot_in_progress note
-
-#pour la suite
-d-i preseed/late_command string \
-    in-target wget -q -O /tmp/puppet-bootstrap.sh http://192.168.1.187/scripts/puppet-bootstrap.sh ; \
-    in-target chmod +x /tmp/puppet-bootstrap.sh ; \
-    in-target /tmp/puppet-bootstrap.sh
 ```
 
 Pour des raisons de sécurité on ne va pas stocker les mots de passes en clair, il faudra générer le hash du mot de passe via la commande `mkpasswd -m sha-512` du paquet `whois`. Puis copier le résultat à la place de `HASH_À_GÉNÉRER`.  
