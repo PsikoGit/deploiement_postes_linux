@@ -50,7 +50,7 @@ De plus, le déploiement automatisé de Debian est beaucoup mieux documenté don
 
 ## 1. IP statique sur le serveur
 
-J'utilise un Debian 13 pour mon serveur, les versions récentes de Debian utilisent Network Manager par défaut pour la gestion du réseau, voici comment mettre des paramètres IP statiques avec Network Manager. Sinon il est possible de désactiver Network Manager et de modifier le fichier `/etc/network/interfaces`.
+J'utilise un Debian 12 pour mon serveur, les versions récentes de Debian utilisent Network Manager par défaut pour la gestion du réseau, voici comment mettre des paramètres IP statiques avec Network Manager. Sinon il est possible de désactiver Network Manager et de modifier le fichier `/etc/network/interfaces`.
 ```bash
 nmcli device show
 
