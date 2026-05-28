@@ -153,6 +153,9 @@ Le script à exécuter sur chaque machine cliente pour l'enrôler comme agent Pu
 #!/bin/bash
 set -euo pipefail
 
+# --- Installation de paquets
+apt-get install gnome-shell-extension-prefs
+
 PUPPET_SERVER="IP_SERVEUR"
 PUPPET_HOSTNAME="HOSTNAME_DU_SERVEUR"
 
