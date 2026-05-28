@@ -182,7 +182,9 @@ cat > /etc/puppetlabs/puppet/puppet.conf << PUPPETCONF
 [main]
 server      = ${PUPPET_HOSTNAME}
 certname    = ${HOSTNAME}
+environment = manage
 runinterval = 30m
+
 PUPPETCONF
 
 # --- 3. Premier run + activation ---
