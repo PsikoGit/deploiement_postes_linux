@@ -129,7 +129,7 @@ total 1,2M
 
 ## 5. Serveur web pour iPXE
 
-Créer un lien symbolique entre le répertoire TFTP et Apache :
+Créer un lien symbolique entre le répertoire TFTP et Apache (pas nécessaire pour debian) :
 
 ```bash
 mkdir -p /var/www/html/tftpboot
