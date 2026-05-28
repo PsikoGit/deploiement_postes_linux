@@ -82,7 +82,7 @@ apt install tftpd-hpa apache2 wget dnsmasq
 
 ## 3. Configuration TFTP
 
-Les clients PXE récupéreront le bootloader iPXE via TFTP. Rappelons que dans l'architecture finale, ce serveur TFTP se trouvera sur un site distant.
+Les clients PXE récupéreront le bootloader iPXE via TFTP. Le serveur peut se trouver sur un serveur distant, il faudra relier les réseaux via tunnel VPN.
 
 Modifier `/etc/default/tftpd-hpa` :
 
@@ -104,7 +104,7 @@ systemctl restart tftpd-hpa.service
 
 ## 4. Téléchargement des bootloaders iPXE
 
-Ces bootloaders permettent de passer de client PXE à client iPXE pour bénéficier des avantages de iPXE.
+Ces bootloaders permettent de passer de client PXE à client iPXE pour bénéficier des avantages de iPXE. Si vous mettez en place un [ProxyDHCP](https://ipxe.org/howto/dhcpd) 
 
 ```bash
 cd /srv/tftp/
