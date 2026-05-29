@@ -4,7 +4,7 @@ La première fonctionnalité qu'on va mettre en place est un portail d'applicati
 
 La gestion centralisée des applications se basera sur un fichier json `/var/www/html/apps.json`, grâce à ce fichier on automatisera la liste des logiciels pouvant être installé via l'application Python, on automatisera également l'attribution des droits sudo aux utilisateurs pour l'installation des logiciels.
 
-⚠️ Le script python développé pour le portail d'application prends en compte que les .deb, il faudra le modifier pour ajouter la gestion des AppImage par exemple, qui est répandu. Une version supportant une gamme plus larges de format sera proposé ultérieurement ⚠️
+⚠️ Le script python développé pour le portail d'application prends en compte que les .deb disponibles directement dans les dépôts Debian, il faudra le modifier pour ajouter la gestion des AppImage par exemple, qui est répandu. Une version supportant une gamme plus larges de format sera proposé ultérieurement ⚠️
 
 On fera un portail d'applications avec Firefox et VLC pour la démonstration :
 
@@ -351,3 +351,38 @@ exec { 'enable-ding':
 
 `package { 'gnome-shell-extension-desktop-icons-ng' ...} + exec { 'enable-ding' ... }` : permet d'afficher les icônes sur le Bureau pour faciliter la vie utilisateur, car c'est désactivé par défaut sur les environnements GNOME.
 </details>
+
+Maintenant dernière étape, il faut que les clients puissent utiliser certaines commandes nécessitant les droits sudo, _apt install ..._, _apt remove ..._, etc...
+
+Pour cela, on va utiliser un fichier sur le serveur, dont le contenu sera généré automatiquement puis poussé dans le dossier `/etc/sudoers.d/` des ordinateurs clients, afin de leur octroyer les droits sudo dynamiquement.
+
+On va écrire un script `/usr/local/bin/gen-sudoers.sh` sur le serveur
+
+```bash
+#!/bin/bash
+
+APPS_JSON="/var/www/html/apps.json"
+SUDOERS_FILE="/etc/puppetlabs/code/environments/manage/modules/portail/files/portail-sudoers"
+
+python3 << 'PYEOF' > $SUDOERS_FILE
+import json
+
+with open("/var/www/html/apps.json") as f:
+    data = json.load(f)
+
+print("# Généré automatiquement depuis apps.json")
+for app in data["apps"]:
+    print(f"utilisateur_local_non_root ALL=(ALL) NOPASSWD: /usr/bin/bash -c {app['command']}")
+    print(f"utilisateur_local_non_root ALL=(ALL) NOPASSWD: /usr/bin/apt remove -y {app['package']}")
+PYEOF
+
+echo "Sudoers généré :"
+cat $SUDOERS_FILE
+```
+
+Ce script génère dynamiquement grâce au fichier json, les lignes de configuration, nécessaire à l'octroiement de droits sudo sans mdp sur les commandes d'installation et de désinstallation. Il écrit les lignes dans le fichier `/etc/puppetlabs/code/environments/manage/modules/portail/files/portail-sudoers`, puis le contenu de ce fichier est copié sur les clients.
+
+Il faudrait exécuter ce script régulièrement via une crontab.
+
+Comme cité ci dessus, toute la configuration du Portail Application est restreint aux paquets .deb se trouvant déjà dans les dépôts Debian. Par exemple, l'installation de [Obsidian](https://obsidian.md/) ne serait pas possible car il faudrait télécharger le .deb manuellement sur leur site puis l'exécuter.
+
