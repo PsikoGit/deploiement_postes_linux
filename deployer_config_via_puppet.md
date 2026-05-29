@@ -53,7 +53,9 @@ L'environnement utilisé par défaut est `/etc/puppetlabs/code/environments/prod
 environment = manage
 ```
 
-Rappelez vous que pour écrire ce fichier on utilisait le [script `/var/www/html/scripts/puppet-bootstrap.sh`](configuration_puppet8.md#4-script-dinstallation-des-agents) qui est exécuté sur les clients à l'installation. On va le modifier en changeant cette partie du script :
+Modifier à la main ce fichier sur le client si il est déjà installé, afin d'éviter un redémarrage sur le réseau et une ré-installation complète.
+
+Pour automatiser cette ligne dans le fichier pour les prochains redémarrage, on va modifier le fichier [`/var/www/html/scripts/puppet-bootstrap.sh`](configuration_puppet8.md#4-script-dinstallation-des-agents) sur le serveur, en changeant cette partie du script :
 
 ```bash
 # --- 2. Configuration ---
@@ -69,7 +71,7 @@ PUPPETCONF
 
 En rajoutant la ligne `environment = manage`
 
-Ensuite récupérer le script `portail-apps.py` : 
+Ensuite récupérer le script `portail-apps.py`, c'est ce code python qui sera poussé sur les clients via Puppet puis exécuter pour afficher le store : 
 
 <details>
   <summary>Afficher le script portail-apps.py</summary>
