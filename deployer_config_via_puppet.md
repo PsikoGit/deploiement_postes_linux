@@ -1,14 +1,20 @@
+# Portail d'Applications — Configuration Puppet
+
 Une fois qu'on a fait en sorte que les ordinateurs qu'on déploie [soient automatiquement des agents Puppet](configuration_puppet8.md), on va configurer le serveur Puppet pour qu'il déploie une certaine configuration sur les agents.
 
 La première fonctionnalité qu'on va mettre en place est un portail d'applications filtrés que les clients seront autorisés de télécharger. J'ai essayé de faire ça avec le gnome-software intégré et un dépot debian privé mais la mise en place est très complexe. Je suis donc parti sur une approche avec un script python qui sera poussé sur les agents. Ce script Python affichera une fenêtre avec la liste des applications autorisés par l'administrateur, avec la possibilité d'installer et de désinstaller.
 
 La gestion centralisée des applications se basera sur un fichier json `/var/www/html/apps.json`, grâce à ce fichier on automatisera la liste des logiciels pouvant être installé via l'application Python, on automatisera également l'attribution des droits sudo aux utilisateurs pour l'installation des logiciels.
 
-⚠️ Le script python développé pour le portail d'application prends en compte que les .deb disponibles directement dans les dépôts Debian, il faudra le modifier pour ajouter la gestion des AppImage par exemple, qui est répandu. Une version supportant une gamme plus larges de format sera proposé ultérieurement ⚠️
+> ⚠️ Le script python développé pour le portail d'application prends en compte que les .deb disponibles directement dans les dépôts Debian, il faudra le modifier pour ajouter la gestion des AppImage par exemple, qui est répandu. Une version supportant une gamme plus larges de format sera proposé ultérieurement ⚠️
+
+---
+
+## 1. Fichier `apps.json`
 
 On fera un portail d'applications avec Firefox et VLC pour la démonstration :
 
-```bash
+```json
 {
   "apps": [
     {
@@ -29,17 +35,19 @@ On fera un portail d'applications avec Firefox et VLC pour la démonstration :
 }
 ```
 
-Les dictionnaires importants sont package et command : 
+Les dictionnaires importants sont `package` et `command` :
 
-La valeur de la clé _package_ sera le nom du paquet une fois installé sur l'ordinateur. Par exemple le logiciel firefox à pour nom de paquet `firefox-esr`, on peut le vérifier en faisant `dpkg -l firefox-esr`. On peut récupérer le nom d'un paquet via la commande `dpkg-deb -f fichier.deb Package`. Le dictionnaire package va nous servir pour supprimer l'application depuis le Portail d'Applications, avec la commande `sudo apt remove nom_du_paquet` qui se lancera quand on clique sur le bouton 'Désinstaller' : 
+- **`package`** — le nom du paquet une fois installé sur l'ordinateur. Par exemple le logiciel firefox à pour nom de paquet `firefox-esr`, on peut le vérifier en faisant `dpkg -l firefox-esr`. On peut récupérer le nom d'un paquet via la commande `dpkg-deb -f fichier.deb Package`. Le dictionnaire package va nous servir pour supprimer l'application depuis le Portail d'Applications, avec la commande `sudo apt remove nom_du_paquet` qui se lancera quand on clique sur le bouton **Désinstaller** :
 
 <p align="center"><img src="images/image3.png" width="200" height="500" /></p>
 
-La valeur de la clé _command_ est la commande qui permettra d'installer le logiciel en question. Ce fichier nous sera utile pour avoir une gestion centralisée des applications autorisées et de permettre d'octroyer les droits sudo dynamiquement.
+- **`command`** — la commande qui permettra d'installer le logiciel en question. Ce fichier nous sera utile pour avoir une gestion centralisée des applications autorisées et de permettre d'octroyer les droits sudo dynamiquement.
 
-Une fois le fichier `apps.json` créé sur le serveur à l'emplacement `/var/www/html/apps.json`, on va commencer à configurer le serveur Puppet pour lancer la configuration souhaitée. 
+---
 
-Préparer l'environnement :
+## 2. Préparer l'environnement Puppet
+
+Une fois le fichier `apps.json` créé sur le serveur à l'emplacement `/var/www/html/apps.json`, on va commencer à configurer le serveur Puppet pour lancer la configuration souhaitée.
 
 ```bash
 mkdir -p /etc/puppetlabs/code/environments/manage/modules/portail/files
@@ -49,7 +57,7 @@ touch /etc/puppetlabs/code/environments/manage/modules/portail/manifests/init.pp
 
 L'environnement utilisé par défaut est `/etc/puppetlabs/code/environments/production/`, pour faire utiliser l'environnement `/etc/puppetlabs/code/environments/manage/` (celui qu'on vient de créer), il faut que sur les agents Puppet, dans le fichier `/etc/puppetlabs/puppet/puppet.conf` il y ait l'instruction :
 
-```bash
+```ini
 [main]
 ...
 environment = manage
@@ -73,14 +81,18 @@ PUPPETCONF
 
 En rajoutant la ligne `environment = manage`
 
-Ensuite récupérer le script `portail-apps.py`, c'est ce code python qui sera poussé sur les clients via Puppet puis exécuter pour afficher le store
+---
+
+## 3. Script `portail-apps.py`
+
+Ensuite récupérer le script `portail-apps.py`, c'est ce code python qui sera poussé sur les clients via Puppet puis exécuter pour afficher le store :
 
 <div align="center"><img src="images/image4.png" width="400" alt="Description" height="500" /></div>
 
 <details>
-  <summary>Afficher le script portail-apps.py</summary>
+<summary>Afficher le script <code>portail-apps.py</code></summary>
 
-```bash
+```python
 import gi
 gi.require_version('Gtk', '4.0')
 from gi.repository import Gtk, GLib
@@ -192,7 +204,6 @@ class PortailApps(Gtk.ApplicationWindow):
         GLib.timeout_add(100, self._pulse_progress, progress)
         threading.Thread(target=self.run_install, args=(command, btn_install, btn_cancel, btn_uninstall, progress, status)).start()
 
-
     def _pulse_progress(self, progress):
         if self._pulse_active:
             progress.pulse()
@@ -216,7 +227,6 @@ class PortailApps(Gtk.ApplicationWindow):
         self.process = None
         self._pulse_active = False
         GLib.idle_add(self.install_done, btn_install, btn_cancel, btn_uninstall, progress, status, returncode == 0)
-
 
     def install_done(self, btn_install, btn_cancel, btn_uninstall, progress, status, success):
         progress.set_visible(False)
@@ -268,19 +278,26 @@ class App(Gtk.Application):
         win.present()
 
 App().run()
-```  
+```
+
 </details>
 
 Et le mettre à l'emplacement `/etc/puppetlabs/code/environments/manage/modules/portail/files`
 
+---
+
+## 4. Manifest Puppet — `portail.pp`
+
 Prochaine étape on va écrire le manifest Puppet sur le serveur, c'est le fichier qui permet de spécifier les instructions pour les clients relatifs au Portail Application.
 
-`nano /etc/puppetlabs/code/environments/manage/manifests/portail.pp`
+```bash
+nano /etc/puppetlabs/code/environments/manage/manifests/portail.pp
+```
 
 <details>
-  <summary>Afficher le fichier portail.pp</summary>
-  
-```bash
+<summary>Afficher le fichier <code>portail.pp</code></summary>
+
+```puppet
 node /^exemple-/ {
   file { '/usr/local/bin/portail-apps.py':
     ensure => present,
@@ -288,13 +305,13 @@ node /^exemple-/ {
     mode   => '0755',
   }
 
-file { '/etc/sudoers.d/portail':
-  ensure => present,
-  source => 'puppet:///modules/portail/portail-sudoers',
-  mode   => '0440',
-  owner  => 'root',
-  group  => 'root',
-}
+  file { '/etc/sudoers.d/portail':
+    ensure => present,
+    source => 'puppet:///modules/portail/portail-sudoers',
+    mode   => '0440',
+    owner  => 'root',
+    group  => 'root',
+  }
 
   file { '/usr/share/applications/portail.desktop':
     ensure  => present,
@@ -308,9 +325,9 @@ Categories=System;
 ",
   }
 
-file { '/home/utilisateur_local_non_root/Bureau/portail.desktop':
-  ensure  => present,
-  content => "[Desktop Entry]
+  file { '/home/utilisateur_local_non_root/Bureau/portail.desktop':
+    ensure  => present,
+    content => "[Desktop Entry]
 Name=Portail Applications
 Exec=python3 /usr/local/bin/portail-apps.py
 Icon=system-software-install
@@ -318,18 +335,18 @@ Terminal=false
 Type=Application
 Categories=System;
 ",
-  owner => 'utilisateur_local_non_root',
-  mode  => '0755',
-}
+    owner => 'utilisateur_local_non_root',
+    mode  => '0755',
+  }
 
-package { 'gnome-shell-extension-desktop-icons-ng':
-  ensure => present,
-}
+  package { 'gnome-shell-extension-desktop-icons-ng':
+    ensure => present,
+  }
 
-exec { 'enable-ding':
-  command => '/bin/su -c "gnome-extensions enable ding@rastersoft.com" utilisateur_local_non_root',
-  require => Package['gnome-shell-extension-desktop-icons-ng'],
-}
+  exec { 'enable-ding':
+    command => '/bin/su -c "gnome-extensions enable ding@rastersoft.com" utilisateur_local_non_root',
+    require => Package['gnome-shell-extension-desktop-icons-ng'],
+  }
 
 }
 ```
@@ -337,26 +354,28 @@ exec { 'enable-ding':
 </details>
 
 <details>
-  <summary>Afficher les explications</summary>
-  
-`node /^exemple-/` : permet d'appliquer la configuration aux noeuds dont le hostname débute par `exemple-`
+<summary>Afficher les explications</summary>
 
-`file { '/usr/local/bin/portail-apps.py' ... }` : créer le fichier `/usr/local/bin/portail-apps.py` sur les clients, le contenu de ce fichier sera celui de `/etc/puppetlabs/code/environments/manage/modules/portail/files/portail-apps.py`. C'est pratique car, en cas de problème, ça permet de modifier le script depuis le serveur, puis le script sera envoyé automatiquement aux clients.
+| Bloc | Description |
+|------|-------------|
+| `node /^exemple-/` | Applique la configuration aux nœuds dont le hostname débute par `exemple-` |
+| `file { '/usr/local/bin/portail-apps.py' }` | Crée le fichier sur les clients, dont le contenu sera celui de `.../modules/portail/files/portail-apps.py`. En cas de problème, ça permet de modifier le script depuis le serveur, puis il sera envoyé automatiquement aux clients. |
+| `file { '/etc/sudoers.d/portail' }` | Étant donné que l'installation et la supression de paquets nécessitent les droits sudo, on crée ce fichier pour octroyer les droits sudo aux utilisateurs, uniquement sur les commandes d'installation et supression des paquets autorisés par l'administrateur ! Son contenu sera celui du fichier `.../files/portail-sudoers` stocké sur le serveur, on traitera ce fichier plus tard. |
+| `file { '/usr/share/applications/portail.desktop' }` | Crée un raccourci "Portail Applications" dans le menu des applications GNOME, permettant de lancer le script `/usr/local/bin/portail-apps.py`. |
+| `file { '/home/utilisateur_local_non_root/Bureau/portail.desktop' }` | Crée l'icône "Portail Applications" sur le Bureau. |
+| `package { 'gnome-shell-extension-desktop-icons-ng' }` + `exec { 'enable-ding' }` | Permet d'afficher les icônes sur le Bureau pour faciliter la vie utilisateur, car c'est désactivé par défaut sur les environnements GNOME. |
 
-`file { '/etc/sudoers.d/portail' ... }` : étant donné que l'installation et la supression de paquets nécessitent les droits sudo, on crée le fichier `/etc/sudoers.d/portail` pour octroyer les droits sudo aux utilisateurs, uniquement sur les commandes d'installation et supression des paquets autorisés par l'administrateur ! le contenu de `/etc/sudoers.d/portail` sera le contenu du fichier `/etc/puppetlabs/code/environments/manage/modules/portail/files/portail-sudoers` stocké sur le serveur, on traitera ce fichier plus tard.
-
-`file { '/usr/share/applications/portail.desktop' ... }` : créer le fichier `/usr/share/applications/portail.desktop` sur les clients afin d’ajouter automatiquement un raccourci “Portail Applications” dans le menu des applications GNOME, permettant de lancer le script `/usr/local/bin/portail-apps.py`.
-
-`file { '/home/utilisateur_local_non_root/Bureau/portail.desktop' ... }` : créer le fichier `/home/utilisateur_local_non_root/Bureau/portail.desktop` sur les clients pour afficher l'icône “Portail Applications” sur le Bureau cette fois-ci.
-
-`package { 'gnome-shell-extension-desktop-icons-ng' ...} + exec { 'enable-ding' ... }` : permet d'afficher les icônes sur le Bureau pour faciliter la vie utilisateur, car c'est désactivé par défaut sur les environnements GNOME.
 </details>
+
+---
+
+## 5. Script `gen-sudoers.sh`
 
 Maintenant dernière étape, il faut que les clients puissent utiliser certaines commandes nécessitant les droits sudo, _apt install ..._, _apt remove ..._, etc...
 
 Pour cela, on va utiliser un fichier sur le serveur, dont le contenu sera généré automatiquement puis poussé dans le dossier `/etc/sudoers.d/` des ordinateurs clients, afin de leur octroyer les droits sudo dynamiquement.
 
-On va écrire un script `/usr/local/bin/gen-sudoers.sh` sur le serveur
+On va écrire un script `/usr/local/bin/gen-sudoers.sh` sur le serveur :
 
 ```bash
 #!/bin/bash
@@ -384,5 +403,6 @@ Ce script génère dynamiquement grâce au fichier json, les lignes de configura
 
 Il faudrait exécuter ce script régulièrement via une crontab.
 
-Comme cité ci dessus, toute la configuration du Portail Application est restreint aux paquets .deb se trouvant déjà dans les dépôts Debian. Par exemple, l'installation de [Obsidian](https://obsidian.md/) ne serait pas possible car il faudrait télécharger le .deb manuellement sur leur site puis l'exécuter.
+---
 
+> Comme cité ci dessus, toute la configuration du Portail Application est restreint aux paquets .deb se trouvant déjà dans les dépôts Debian. Par exemple, l'installation de [Obsidian](https://obsidian.md/) ne serait pas possible car il faudrait télécharger le .deb manuellement sur leur site puis l'exécuter.
