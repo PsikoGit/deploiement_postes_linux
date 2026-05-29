@@ -4,6 +4,8 @@ La première fonctionnalité qu'on va mettre en place est un portail d'applicati
 
 La gestion centralisée des applications se basera sur un fichier json `/var/www/html/apps.json`, grâce à ce fichier on automatisera la liste des logiciels pouvant être installé via l'application Python, on automatisera également l'attribution des droits sudo aux utilisateurs pour l'installation des logiciels.
 
+⚠️ Le script python développé pour le portail d'application prends en compte que les .deb, il faudra le modifier pour ajouter la gestion des AppImage par exemple, qui est répandu. Une version supportant une gamme plus larges de format sera proposé ultérieurement ⚠️
+
 On fera un portail d'applications avec Firefox et VLC pour la démonstration :
 
 ```bash
@@ -29,13 +31,13 @@ On fera un portail d'applications avec Firefox et VLC pour la démonstration :
 
 Les dictionnaires importants sont package et command : 
 
-La valeur de la clé package sera le nom du paquet une fois installé sur l'ordinateur. Par exemple le logiciel firefox à pour nom de paquet `firefox-esr`, on peut le vérifier en faisant `dpkg -l firefox-esr`. On peut récupérer le nom d'un paquet via la commande `dpkg-deb -f fichier.deb Package`. Le dictionnaire package va nous servir pour supprimer l'application depuis le Portail d'Applications, avec la commande `sudo apt remove nom_du_paquet` qui se lancera quand on clique sur le bouton 'Désinstaller' #ICI Y'AURA UN SCREEN
+La valeur de la clé _package_ sera le nom du paquet une fois installé sur l'ordinateur. Par exemple le logiciel firefox à pour nom de paquet `firefox-esr`, on peut le vérifier en faisant `dpkg -l firefox-esr`. On peut récupérer le nom d'un paquet via la commande `dpkg-deb -f fichier.deb Package`. Le dictionnaire package va nous servir pour supprimer l'application depuis le Portail d'Applications, avec la commande `sudo apt remove nom_du_paquet` qui se lancera quand on clique sur le bouton 'Désinstaller' : 
 
-⚠️ Le script python développé pour le portail d'application prends en compte que les .deb, il faudra le modifier pour ajouter la gestion des AppImage par exemple, qui est répandu. Une version supportant une gamme plus larges de format sera proposé ultérieurement ⚠️
+<p align="center"><img src="images/image3.png" width="200" height="500" /></p>
 
-La valeur de la clé command est la commande qui permettra d'installer le logiciel en question. Ce fichier nous sera utile pour avoir une gestion centralisée des applications autorisées et de permettre d'octroyer les droits sudo dynamiquement.
+La valeur de la clé _command_ est la commande qui permettra d'installer le logiciel en question. Ce fichier nous sera utile pour avoir une gestion centralisée des applications autorisées et de permettre d'octroyer les droits sudo dynamiquement.
 
-Une fois le fichier apps.json créé sur le serveur à l'emplacement `/var/www/html/apps.json`, on va commencer à configurer le serveur Puppet pour lancer la configuration souhaitée. 
+Une fois le fichier `apps.json` créé sur le serveur à l'emplacement `/var/www/html/apps.json`, on va commencer à configurer le serveur Puppet pour lancer la configuration souhaitée. 
 
 Préparer l'environnement :
 
@@ -71,7 +73,9 @@ PUPPETCONF
 
 En rajoutant la ligne `environment = manage`
 
-Ensuite récupérer le script `portail-apps.py`, c'est ce code python qui sera poussé sur les clients via Puppet puis exécuter pour afficher le store : 
+Ensuite récupérer le script `portail-apps.py`, c'est ce code python qui sera poussé sur les clients via Puppet puis exécuter pour afficher le store
+
+<div align="center"><img src="images/image4.png" width="400" alt="Description" height="500" /></div>
 
 <details>
   <summary>Afficher le script portail-apps.py</summary>
@@ -269,14 +273,12 @@ App().run()
 
 Et le mettre à l'emplacement `/etc/puppetlabs/code/environments/manage/modules/portail/files`
 
-Voici un aperçu de l'application Python #ICI DEUXIEME SCREEN
-
 Prochaine étape on va écrire le manifest Puppet sur le serveur, c'est le fichier qui permet de spécifier les instructions pour les clients relatifs au Portail Application.
 
-`nano /etc/puppetlabs/code/environments/manage/manifests/exemple.pp`
+`nano /etc/puppetlabs/code/environments/manage/manifests/portail.pp`
 
 <details>
-  <summary>Afficher le fichier exemple.pp</summary>
+  <summary>Afficher le fichier portail.pp</summary>
   
 ```bash
 node /^exemple-/ {
@@ -334,14 +336,18 @@ exec { 'enable-ding':
 
 </details>
 
-Explications : 
-
+<details>
+  <summary>Afficher les explications</summary>
+  
 `node /^exemple-/` : permet d'appliquer la configuration aux noeuds dont le hostname débute par `exemple-`
 
-```bash
- file { '/usr/local/bin/portail-apps.py':
-    ensure => present,
-    source => 'puppet:///modules/portail/portail-apps.py',
-    mode   => '0755',
-  }
-``` : créer le fichier `/usr/local/bin/portail-apps.py` sur les clients, le contenu de ce fichier sera celui de `/etc/puppetlabs/code/environments/manage/modules/portail/files/portail-apps.py`. C'est pratique car, en cas de problème, ça permet de modifier le script depuis le serveur, puis le script sera envoyé automatiquement aux clients.
+`file { '/usr/local/bin/portail-apps.py' ... }` : créer le fichier `/usr/local/bin/portail-apps.py` sur les clients, le contenu de ce fichier sera celui de `/etc/puppetlabs/code/environments/manage/modules/portail/files/portail-apps.py`. C'est pratique car, en cas de problème, ça permet de modifier le script depuis le serveur, puis le script sera envoyé automatiquement aux clients.
+
+`file { '/etc/sudoers.d/portail' ... }` : étant donné que l'installation et la supression de paquets nécessitent les droits sudo, on crée le fichier `/etc/sudoers.d/portail` pour octroyer les droits sudo aux utilisateurs, uniquement sur les commandes d'installation et supression des paquets autorisés par l'administrateur ! le contenu de `/etc/sudoers.d/portail` sera le contenu du fichier `/etc/puppetlabs/code/environments/manage/modules/portail/files/portail-sudoers` stocké sur le serveur, on traitera ce fichier plus tard.
+
+`file { '/usr/share/applications/portail.desktop' ... }` : créer le fichier `/usr/share/applications/portail.desktop` sur les clients afin d’ajouter automatiquement un raccourci “Portail Applications” dans le menu des applications GNOME, permettant de lancer le script `/usr/local/bin/portail-apps.py`.
+
+`file { '/home/utilisateur_local_non_root/Bureau/portail.desktop' ... }` : créer le fichier `/home/utilisateur_local_non_root/Bureau/portail.desktop` sur les clients pour afficher l'icône “Portail Applications” sur le Bureau cette fois-ci.
+
+`package { 'gnome-shell-extension-desktop-icons-ng' ...} + exec { 'enable-ding' ... }` : permet d'afficher les icônes sur le Bureau pour faciliter la vie utilisateur, car c'est désactivé par défaut sur les environnements GNOME.
+</details>
