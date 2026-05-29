@@ -130,7 +130,7 @@ systemctl restart puppetserver
 
 ## 4. Script d'installation des agents
 
-L'objectif est que les clients iPXE soient automatiquement des agents Puppet afin que le PuppetServer leur envoie la configuration nécessaire. On utilisera l'instruction **late_command** du fichier preseed [Voir ici](deployer_poste_linux.md#82-automatisation-debian).
+L'objectif est que les clients iPXE soient automatiquement des agents Puppet afin que le PuppetServer leur envoie la configuration nécessaire. On utilisera l'instruction **late_command** du [fichier preseed](deployer_poste_linux.md#82-automatisation-debian).
 
 On va faire exécuter automatiquement un script sur les clients qui sera récupéré depuis le serveur.
 
