@@ -269,7 +269,7 @@ Et le mettre à l'emplacement `/etc/puppetlabs/code/environments/manage/modules/
 
 Voici un aperçu de l'application Python #ICI DEUXIEME SCREEN
 
-Prochaine étape on va écrire le manifest Puppet sur le serveur, c'est le fichier qui permet de spécifier les instructions pour les clients.
+Prochaine étape on va écrire le manifest Puppet sur le serveur, c'est le fichier qui permet de spécifier les instructions pour les clients relatifs au Portail Application.
 
 `nano /etc/puppetlabs/code/environments/manage/manifests/exemple.pp`
 
@@ -304,7 +304,7 @@ Categories=System;
 ",
   }
 
-file { '/home/soulim/Bureau/portail.desktop':
+file { '/home/utilisateur_local_non_root/Bureau/portail.desktop':
   ensure  => present,
   content => "[Desktop Entry]
 Name=Portail Applications
@@ -314,7 +314,7 @@ Terminal=false
 Type=Application
 Categories=System;
 ",
-  owner => 'soulim',
+  owner => 'utilisateur_local_non_root',
   mode  => '0755',
 }
 
@@ -323,7 +323,7 @@ package { 'gnome-shell-extension-desktop-icons-ng':
 }
 
 exec { 'enable-ding':
-  command => '/bin/su -c "gnome-extensions enable ding@rastersoft.com" soulim',
+  command => '/bin/su -c "gnome-extensions enable ding@rastersoft.com" utilisateur_local_non_root',
   require => Package['gnome-shell-extension-desktop-icons-ng'],
 }
 
