@@ -399,10 +399,12 @@ echo "Sudoers généré :"
 cat $SUDOERS_FILE
 ```
 
-Ce script génère dynamiquement grâce au fichier json, les lignes de configuration, nécessaire à l'octroiement de droits sudo sans mdp sur les commandes d'installation et de désinstallation. Il écrit les lignes dans le fichier `/etc/puppetlabs/code/environments/manage/modules/portail/files/portail-sudoers`, puis le contenu de ce fichier est copié sur les clients.
+⚠️Comme on peut l'aperçevoir, ce script octroie automatiquement des droits root aux agents Puppet sur leurs poste, grâce au fichier json. Si un attaquant arrive à manipuler ce fichier json, il peut insérer des lignes permettant de donner des droits root sur n'importe quelle commande, il faudra donc veiller à sécuriser le serveur web⚠️
+
+Ce script génère dynamiquement grâce au fichier json, les lignes de configuration, nécessaire à l'octroiement de droits root sans mdp sur les commandes d'installation et de désinstallation. Il écrit les lignes dans le fichier `/etc/puppetlabs/code/environments/manage/modules/portail/files/portail-sudoers` sur le serveur, puis le contenu de ce fichier est copié sur les clients.
 
 Il faudrait exécuter ce script régulièrement via une crontab.
 
 ---
 
-> Comme cité ci dessus, toute la configuration du Portail Application est restreint aux paquets .deb se trouvant déjà dans les dépôts Debian. Par exemple, l'installation de [Obsidian](https://obsidian.md/) ne serait pas possible car il faudrait télécharger le .deb manuellement sur leur site puis l'exécuter.
+> Comme cité ci dessus, toute la configuration du Portail Application est restreint aux paquets .deb se trouvant déjà dans les dépôts Debian. Par exemple, l'installation de [Obsidian](https://obsidian.md/) ne serait pas possible car il faudrait télécharger le .deb manuellement sur leur site puis l'exécuter. Il faudra donc adapter la configuration si d'autres formats d'installations veulent être pris en compte.
