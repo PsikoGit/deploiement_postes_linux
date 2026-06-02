@@ -78,6 +78,7 @@ nmcli con up "Wired connection 1"
 apt install tftpd-hpa apache2 wget dnsmasq
 ```
 
+⚠️Attention, la sécurisation des services HTTP et TFTP du serveur n'ont pas été pris en compte dans cette documentation, cette partie prenant beaucoup de temps, j'ai décider de l'omettre, ça sera à vous de sécuriser ces servics là
 ---
 
 ## 3. Configuration TFTP
