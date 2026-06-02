@@ -327,13 +327,6 @@ d-i netcfg/choose_interface select auto
 d-i netcfg/hostname string rechidov-test
 d-i netcfg/get_domain string
 
-#peut-être mettre ça à la place si jamais le hostname marche pas
-#d-i netcfg/choose_interface select auto
-#d-i netcfg/hostname string rechidov-test
-#d-i netcfg/get_hostname string rechidov-test
-#d-i netcfg/get_domain string
-#d-i netcfg/disable_dhcp_hostname boolean true
-
 d-i auto-install/enable boolean true
 d-i debconf/priority string critical
 
@@ -364,11 +357,11 @@ d-i hw-detect/load_firmware boolean true
 d-i finish-install/reboot_in_progress note
 ```
 
-Pour des raisons de sécurité on ne va pas stocker les mots de passes en clair, il faudra générer le hash du mot de passe via la commande `mkpasswd -m sha-512` du paquet `whois`. Puis copier le résultat à la place de `HASH_À_GÉNÉRER`.  
+Pour des raisons de sécurité on ne va pas stocker les mots de passes en clair, il faudra générer le hash du mot de passe via la commande `mkpasswd -m sha-512` du paquet `whois`. Puis coller le résultat à la place de `HASH_À_GÉNÉRER`.  
 
 ## 9. Fichier install.ipxe
 
-C'est le fichier final qui sera exécuté par les clients iPXE. Il faudra adapter le fichier pour que ça choisisse une des distributions automatiquement. Ici je laisse les 2 pour montrer la configuration. Il est possible de définir des variables dans le fichier iPXE et d'y accéder dans le fichier preseed, ce qui peut-être très puissant.
+C'est le fichier final qui sera exécuté par les clients iPXE. Il faudra adapter le fichier pour que ça choisisse une des distributions automatiquement. Ici je laisse les 2 pour montrer la configuration. Il est possible de définir des variables dans le fichier iPXE et d'y accéder dans le fichier preseed, et d'autres choses encore, ce qui en fait un outil très puissant.
 
 ```bash
 cat /var/www/html/install.ipxe
@@ -385,6 +378,7 @@ item --gap --        --- Outils ---
 item shell           Shell iPXE
 item exit            Booter sur le disque local
 choose --timeout ${menu-timeout} --default exit target && goto ${target}
+#Ici ça choisi de booter sur le disque local par défaut
 
 :debian
 kernel http://${server_ip}/debian/debian-installer/amd64/linux
