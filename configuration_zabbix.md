@@ -3,6 +3,8 @@ Documentation officiel de Zabbix : https://www.zabbix.com/documentation/7.4/en/m
 
 Chosir les composants que vous souhaitez, moi j'ai pris ceux là : Debian, Bookworm, Server Frontend Agent, MySQL, Apache
 
+Le port d'écoute du serveur Zabbix est 10051, le port d'écoute de l'agent Zabbix est 10050
+
 Installer zabbix repository : 
 
 ```bash
