@@ -80,7 +80,7 @@ supprimer la directive `Hostname=`
 
 Puis faire `systemctl restart zabbix-agent`
 
-Côté serveur : 
+Côté serveur :
 
 Aller sur l'interface web du serveur -> Alertes -> Actions -> Actions d'enregistrement automatique -> Créer une action -> Attribuer un nom à l'action et cocher Activé -> Opérations -> Ajouter les opérations souhaités, moi j'ai mis ajouter hôte, ajouter groupe d'hôte (Discovery hosts) et lier le modèle (Linux by Zabbix agent active)
 
@@ -92,4 +92,59 @@ Pour rajouter un item dans un modèle : Collecte de données -> Modèles -> Sél
 
 Il est également possible de créer un modèle personnalisé, pour choisir les informations qu'on souhaite superviser sur le client.
 
-J'ai personnellement rajouté un Item dans le template Linux by Zabbix agent active, permettant de voir les paquets installés sur le poste : https://www.zabbix.com/documentation/7.2/en/manual/config/items/itemtypes/zabbix_agent#system.sw.packages
+J'ai personnellement rajouté un Item dans le template `Linux by Zabbix agent active`, permettant de voir les paquets installés sur le poste : https://www.zabbix.com/documentation/7.2/en/manual/config/items/itemtypes/zabbix_agent#system.sw.packages
+
+2ème grande partie : déployer automatiquement les clients Zabbix via Puppet :
+
+On va modifier le fichier site.pp pour rajouter ceci : 
+
+```bash
+# Zabbix agent
+exec { 'download-zabbix-repo':
+    command => '/usr/bin/wget -q https://repo.zabbix.com/zabbix/7.4/release/debian/pool/main/z/zabbix-release/zabbix-release_latest_7.4+debian13_all.deb -O /tmp/zabbix-release.deb',
+    creates => '/tmp/zabbix-release.deb',
+}
+
+exec { 'install-zabbix-repo':
+    command => '/usr/bin/dpkg -i /tmp/zabbix-release.deb',
+    creates => '/etc/apt/sources.list.d/zabbix.list',
+    require => Exec['download-zabbix-repo'],
+}
+
+exec { 'apt-update-zabbix':
+    command     => '/usr/bin/apt-get update',
+    refreshonly => true,
+    subscribe   => Exec['install-zabbix-repo'],
+}
+
+package { 'zabbix-agent':
+    ensure  => present,
+    require => Exec['apt-update-zabbix'],
+}
+
+file { '/etc/zabbix/zabbix_agentd.conf':
+    ensure  => present,
+    owner   => 'root',
+    group   => 'zabbix',
+    mode    => '0640',
+    content => "# Managed by Puppet - do not edit manually
+
+PidFile=/run/zabbix/zabbix_agentd.pid
+LogFile=/var/log/zabbix/zabbix_agentd.log
+LogFileSize=0
+
+Server=IP_SERVEUR_ZABBIX
+ServerActive=IP_SERVEUR_ZABBIX
+
+Include=/etc/zabbix/zabbix_agentd.d/*.conf
+",
+    require => Package['zabbix-agent'],
+    notify  => Service['zabbix-agent'],
+}
+
+service { 'zabbix-agent':
+    ensure  => running,
+    enable  => true,
+    require => Package['zabbix-agent'],
+}
+```
