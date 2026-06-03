@@ -91,3 +91,5 @@ Liste de tous les items qu'on peut rajouter : https://www.zabbix.com/documentati
 Pour rajouter un item dans un modèle : Collecte de données -> Modèles -> Sélectionner le modèle à changer -> Créer un élément
 
 Il est également possible de créer un modèle personnalisé, pour choisir les informations qu'on souhaite superviser sur le client.
+
+J'ai personnellement rajouté un Item dans le template Linux by Zabbix agent active, permettant de voir les paquets installés sur le poste : https://www.zabbix.com/documentation/7.2/en/manual/config/items/itemtypes/zabbix_agent#system.sw.packages
