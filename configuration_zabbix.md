@@ -52,9 +52,35 @@ systemctl enable zabbix-server zabbix-agent apache2
 
 Ensuite aller sur l'URL `http://IP_SERVEUR/zabbix` et faire l'installation Web, une fois terminé, le login par défaut : `Admin` et mot de passe par défaut : `zabbix`
 
+
 Créer un utilisateur normal pour l'appli web Zabbix : https://www.zabbix.com/documentation/7.4/en/manual/quickstart/login
 
 Faire en sorte que le PC soit Zabbix client automatiquement : 
 
-Installer Zabbix Agents sur le client : https://www.zabbix.com/download?zabbix=7.4&os_distribution=debian&os_version=13&components=agent&db=&ws=
-et suivre cette doc :https://www.zabbix.com/documentation/7.4/en/manual/discovery/auto_registration?hl=agent%2Cautoregistration
+Installer Zabbix Agents sur le client : https://www.zabbix.com/download?zabbix=7.4&os_distribution=debian&os_version=13&components=agent&db=&ws= <br>
+et suivre cette doc : https://www.zabbix.com/documentation/7.4/en/manual/discovery/auto_registration?hl=agent%2Cautoregistration
+
+Côté client :
+
+```bash
+wget https://repo.zabbix.com/zabbix/7.4/release/debian/pool/main/z/zabbix-release/zabbix-release_latest_7.4+debian13_all.deb
+dpkg -i zabbix-release_latest_7.4+debian13_all.deb
+apt update
+apt install zabbix-agent
+```
+
+On va modifier le fichier `/etc/zabbix/zabbix_agentd.conf` pour modifier les lignes : 
+
+```bash
+Server=IP_SERVEUR
+ServerActive=IP_SERVEUR
+```
+
+supprimer la directive `Hostname=`
+
+Puis faire `systemctl restart zabbix-agent`
+
+Côté serveur : 
+
+Aller sur l'interface web du serveur -> Alertes -> Actions -> Actions d'enregistrement automatique -> Créer une action -> Attribuer un nom à l'action et cocher Activé -> Opérations -> Ajouter les opérations souhaités, moi j'ai mis ajouter hôte, ajouter groupe d'hôte (Discovery hosts) et lier le modèle (Linux by Zabbix agent et Linux by Zabbix agent active)
+
