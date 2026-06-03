@@ -82,5 +82,12 @@ Puis faire `systemctl restart zabbix-agent`
 
 Côté serveur : 
 
-Aller sur l'interface web du serveur -> Alertes -> Actions -> Actions d'enregistrement automatique -> Créer une action -> Attribuer un nom à l'action et cocher Activé -> Opérations -> Ajouter les opérations souhaités, moi j'ai mis ajouter hôte, ajouter groupe d'hôte (Discovery hosts) et lier le modèle (Linux by Zabbix agent et Linux by Zabbix agent active)
+Aller sur l'interface web du serveur -> Alertes -> Actions -> Actions d'enregistrement automatique -> Créer une action -> Attribuer un nom à l'action et cocher Activé -> Opérations -> Ajouter les opérations souhaités, moi j'ai mis ajouter hôte, ajouter groupe d'hôte (Discovery hosts) et lier le modèle (Linux by Zabbix agent active)
 
+Il est possible de rajouter des Items, ce sont des informations qu'on souhaite récupérer sur les postes, pour se faire on va ajouter un Item dans le modèle Linux by Zabbix agent active qui existe déjà.
+
+Liste de tous les items qu'on peut rajouter : https://www.zabbix.com/documentation/7.2/en/manual/config/items/itemtypes/zabbix_agent
+
+Pour rajouter un item dans un modèle : Collecte de données -> Modèles -> Sélectionner le modèle à changer -> Créer un élément
+
+Il est également possible de créer un modèle personnalisé, pour choisir les informations qu'on souhaite superviser sur le client.
