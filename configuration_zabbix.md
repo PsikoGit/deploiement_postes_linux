@@ -1,11 +1,47 @@
-Pour installer Zabbix aller sur ce lien : https://www.zabbix.com/download <br>
-Documentation officiel de Zabbix : https://www.zabbix.com/documentation/7.4/en/manual
+# 📡 Documentation Zabbix 7.4
 
-Chosir les composants que vous souhaitez, moi j'ai pris ceux là : Debian, Bookworm, Server Frontend Agent, MySQL, Apache
+> Supervision de parc avec Zabbix Server, Agent, et déploiement automatique via Puppet.
 
-Le port d'écoute du serveur Zabbix est 10051, le port d'écoute de l'agent Zabbix est 10050
+---
 
-Installer zabbix repository : 
+## Table des matières
+
+- [Installation du serveur Zabbix](#installation-du-serveur-zabbix)
+  - [Prérequis](#prérequis)
+  - [Installation du dépôt Zabbix](#installation-du-dépôt-zabbix)
+  - [Installation des composants](#installation-des-composants)
+  - [Configuration de la base de données](#configuration-de-la-base-de-données)
+  - [Configuration et démarrage des services](#configuration-et-démarrage-des-services)
+  - [Installation Web](#installation-web)
+- [Configuration des clients Zabbix](#configuration-des-clients-zabbix)
+  - [Installation de l'agent côté client](#installation-de-lagent-côté-client)
+  - [Configuration de l'agent côté client](#configuration-de-lagent-côté-client)
+  - [Configuration de l'auto-enregistrement côté serveur](#configuration-de-lauto-enregistrement-côté-serveur)
+- [Ajout d'Items personnalisés](#ajout-ditems-personnalisés)
+- [Déploiement automatique via Puppet](#déploiement-automatique-via-puppet)
+
+---
+
+## Installation du serveur Zabbix
+
+### Prérequis
+
+| Composant | Valeur |
+|-----------|--------|
+| OS | Debian Bookworm (12) |
+| Composants | Server, Frontend, Agent |
+| Base de données | MySQL / MariaDB |
+| Serveur web | Apache |
+| Port serveur Zabbix | `10051` |
+| Port agent Zabbix | `10050` |
+
+> 🔗 **Liens utiles :**
+> - [Page de téléchargement officielle](https://www.zabbix.com/download)
+> - [Documentation officielle Zabbix 7.4](https://www.zabbix.com/documentation/7.4/en/manual)
+
+---
+
+### Installation du dépôt Zabbix
 
 ```bash
 wget https://repo.zabbix.com/zabbix/7.4/release/debian/pool/main/z/zabbix-release/zabbix-release_latest_7.4+debian12_all.deb
@@ -13,54 +49,104 @@ dpkg -i zabbix-release_latest_7.4+debian12_all.deb
 apt update
 ```
 
-Installer Zabbix Server, Agent et Frontend : 
+---
+
+### Installation des composants
 
 ```bash
 apt install zabbix-server-mysql zabbix-frontend-php zabbix-apache-conf zabbix-sql-scripts zabbix-agent
 ```
 
-Installer la base de donnée, moi je vais utiliser mariadb :
+---
+
+### Configuration de la base de données
+
+#### 1. Installer MariaDB
 
 ```bash
 apt install mariadb-server
-mysql -u root -p
-#ou faire sudo mysql
-
-mysql> create database zabbix character set utf8mb4 collate utf8mb4_bin;
-mysql> create user zabbix@localhost identified by 'password';
-mysql> grant all privileges on zabbix.* to zabbix@localhost;
-mysql> set global log_bin_trust_function_creators = 1;
-mysql> quit;
-
-zcat /usr/share/zabbix/sql-scripts/mysql/server.sql.gz | mysql --default-character-set=utf8mb4 -uzabbix -p zabbix
-
-mysql -u root -p
-#ou faire sudo mysql
-
-mysql> set global log_bin_trust_function_creators = 0;
-mysql> quit;
 ```
 
-Modifier la ligne `DBPassword=password` du fichier `/etc/zabbix/zabbix_server.conf`
+#### 2. Créer la base et l'utilisateur
 
-Lancer le service Zabbix Agent et Serveur : 
+```bash
+mysql -u root -p
+# ou : sudo mysql
+```
+
+```sql
+CREATE DATABASE zabbix CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
+CREATE USER zabbix@localhost IDENTIFIED BY 'password';
+GRANT ALL PRIVILEGES ON zabbix.* TO zabbix@localhost;
+SET GLOBAL log_bin_trust_function_creators = 1;
+QUIT;
+```
+
+#### 3. Importer le schéma SQL
+
+```bash
+zcat /usr/share/zabbix/sql-scripts/mysql/server.sql.gz | mysql --default-character-set=utf8mb4 -uzabbix -p zabbix
+```
+
+#### 4. Désactiver l'option temporaire
+
+```bash
+mysql -u root -p
+# ou : sudo mysql
+```
+
+```sql
+SET GLOBAL log_bin_trust_function_creators = 0;
+QUIT;
+```
+
+#### 5. Configurer le mot de passe dans Zabbix
+
+Modifier le fichier `/etc/zabbix/zabbix_server.conf` :
+
+```ini
+DBPassword=password
+```
+
+---
+
+### Configuration et démarrage des services
 
 ```bash
 systemctl restart zabbix-server zabbix-agent apache2
 systemctl enable zabbix-server zabbix-agent apache2
 ```
 
-Ensuite aller sur l'URL `http://IP_SERVEUR/zabbix` et faire l'installation Web, une fois terminé, le login par défaut : `Admin` et mot de passe par défaut : `zabbix`
+---
 
+### Installation Web
 
-Créer un utilisateur normal pour l'appli web Zabbix : https://www.zabbix.com/documentation/7.4/en/manual/quickstart/login
+1. Ouvrir un navigateur et aller sur : `http://IP_SERVEUR/zabbix`
+2. Suivre l'assistant d'installation web
+3. Se connecter avec les identifiants par défaut :
 
-Faire en sorte que le PC soit Zabbix client automatiquement : 
+| Champ | Valeur |
+|-------|--------|
+| Login | `Admin` |
+| Mot de passe | `zabbix` |
 
-Installer Zabbix Agents sur le client : https://www.zabbix.com/download?zabbix=7.4&os_distribution=debian&os_version=13&components=agent&db=&ws= <br>
-et suivre cette doc : https://www.zabbix.com/documentation/7.4/en/manual/discovery/auto_registration?hl=agent%2Cautoregistration
+> ⚠️ **Penser à changer le mot de passe par défaut après la première connexion.**
 
-Côté client :
+> 🔗 [Créer un utilisateur normal dans Zabbix](https://www.zabbix.com/documentation/7.4/en/manual/quickstart/login)
+
+---
+
+## Configuration des clients Zabbix
+
+L'objectif est que chaque client s'enregistre **automatiquement** auprès du serveur Zabbix.
+
+> 🔗 [Documentation auto-enregistrement Zabbix](https://www.zabbix.com/documentation/7.4/en/manual/discovery/auto_registration?hl=agent%2Cautoregistration)
+
+---
+
+### Installation de l'agent côté client
+
+> 🔗 [Télécharger Zabbix Agent pour Debian 13](https://www.zabbix.com/download?zabbix=7.4&os_distribution=debian&os_version=13&components=agent&db=&ws=)
 
 ```bash
 wget https://repo.zabbix.com/zabbix/7.4/release/debian/pool/main/z/zabbix-release/zabbix-release_latest_7.4+debian13_all.deb
@@ -69,65 +155,107 @@ apt update
 apt install zabbix-agent
 ```
 
-On va modifier le fichier `/etc/zabbix/zabbix_agentd.conf` pour modifier les lignes : 
+---
 
-```bash
+### Configuration de l'agent côté client
+
+Modifier le fichier `/etc/zabbix/zabbix_agentd.conf` :
+
+```ini
 Server=IP_SERVEUR
 ServerActive=IP_SERVEUR
+# Supprimer ou commenter la ligne Hostname=
 ```
 
-supprimer la directive `Hostname=`
-
-Puis faire `systemctl restart zabbix-agent`
-
-Côté serveur :
-
-Aller sur l'interface web du serveur -> Alertes -> Actions -> Actions d'enregistrement automatique -> Créer une action -> Attribuer un nom à l'action et cocher Activé -> Opérations -> Ajouter les opérations souhaités, moi j'ai mis ajouter hôte, ajouter groupe d'hôte (Discovery hosts) et lier le modèle (Linux by Zabbix agent active)
-
-Il est possible de rajouter des Items, ce sont des informations qu'on souhaite récupérer sur les postes, pour se faire on va ajouter un Item dans le modèle Linux by Zabbix agent active qui existe déjà.
-
-Liste de tous les items qu'on peut rajouter : https://www.zabbix.com/documentation/7.2/en/manual/config/items/itemtypes/zabbix_agent
-
-Pour rajouter un item dans un modèle : Collecte de données -> Modèles -> Sélectionner le modèle à changer -> Créer un élément
-
-Il est également possible de créer un modèle personnalisé, pour choisir les informations qu'on souhaite superviser sur le client.
-
-J'ai personnellement rajouté un Item dans le template `Linux by Zabbix agent active`, permettant de voir les paquets installés sur le poste : https://www.zabbix.com/documentation/7.2/en/manual/config/items/itemtypes/zabbix_agent#system.sw.packages
-
-2ème grande partie : déployer automatiquement les clients Zabbix via Puppet :
-
-On va modifier le fichier site.pp pour rajouter ceci : 
+Puis redémarrer l'agent :
 
 ```bash
-# Zabbix agent
+systemctl restart zabbix-agent
+```
+
+---
+
+### Configuration de l'auto-enregistrement côté serveur
+
+Dans l'interface web du serveur, suivre ce chemin :
+
+```
+Alertes → Actions → Actions d'enregistrement automatique → Créer une action
+```
+
+Paramètres recommandés :
+
+| Étape | Action |
+|-------|--------|
+| 1 | Attribuer un nom à l'action |
+| 2 | Cocher **Activé** |
+| 3 | Onglet **Opérations** → Ajouter les opérations |
+
+Opérations suggérées :
+
+- ✅ Ajouter hôte
+- ✅ Ajouter au groupe d'hôtes : `Discovery hosts`
+- ✅ Lier le modèle : `Linux by Zabbix agent active`
+
+---
+
+## Ajout d'Items personnalisés
+
+Les **Items** sont des métriques collectées sur les postes supervisés.
+
+> 🔗 [Liste complète des items disponibles](https://www.zabbix.com/documentation/7.2/en/manual/config/items/itemtypes/zabbix_agent)
+
+### Ajouter un item dans un modèle existant
+
+```
+Collecte de données → Modèles → Sélectionner le modèle → Créer un élément
+```
+
+### Exemple : lister les paquets installés
+
+Item ajouté dans le modèle `Linux by Zabbix agent active` pour récupérer la liste des paquets installés sur chaque poste :
+
+> 🔗 [Documentation system.sw.packages](https://www.zabbix.com/documentation/7.2/en/manual/config/items/itemtypes/zabbix_agent#system.sw.packages)
+
+> 💡 Il est également possible de **créer un modèle personnalisé** pour choisir précisément les informations à superviser.
+
+---
+
+## Déploiement automatique via Puppet
+
+Pour déployer l'agent Zabbix automatiquement sur tous les clients, ajouter le bloc suivant dans le fichier `site.pp` de Puppet :
+
+```puppet
+# Zabbix agent — Managed by Puppet
+
 exec { 'download-zabbix-repo':
-    command => '/usr/bin/wget -q https://repo.zabbix.com/zabbix/7.4/release/debian/pool/main/z/zabbix-release/zabbix-release_latest_7.4+debian13_all.deb -O /tmp/zabbix-release.deb',
-    creates => '/tmp/zabbix-release.deb',
+  command => '/usr/bin/wget -q https://repo.zabbix.com/zabbix/7.4/release/debian/pool/main/z/zabbix-release/zabbix-release_latest_7.4+debian13_all.deb -O /tmp/zabbix-release.deb',
+  creates => '/tmp/zabbix-release.deb',
 }
 
 exec { 'install-zabbix-repo':
-    command => '/usr/bin/dpkg -i /tmp/zabbix-release.deb',
-    creates => '/etc/apt/sources.list.d/zabbix.list',
-    require => Exec['download-zabbix-repo'],
+  command => '/usr/bin/dpkg -i /tmp/zabbix-release.deb',
+  creates => '/etc/apt/sources.list.d/zabbix.list',
+  require => Exec['download-zabbix-repo'],
 }
 
 exec { 'apt-update-zabbix':
-    command     => '/usr/bin/apt-get update',
-    refreshonly => true,
-    subscribe   => Exec['install-zabbix-repo'],
+  command     => '/usr/bin/apt-get update',
+  refreshonly => true,
+  subscribe   => Exec['install-zabbix-repo'],
 }
 
 package { 'zabbix-agent':
-    ensure  => present,
-    require => Exec['apt-update-zabbix'],
+  ensure  => present,
+  require => Exec['apt-update-zabbix'],
 }
 
 file { '/etc/zabbix/zabbix_agentd.conf':
-    ensure  => present,
-    owner   => 'root',
-    group   => 'zabbix',
-    mode    => '0640',
-    content => "# Managed by Puppet - do not edit manually
+  ensure  => present,
+  owner   => 'root',
+  group   => 'zabbix',
+  mode    => '0640',
+  content => "# Managed by Puppet - do not edit manually
 
 PidFile=/run/zabbix/zabbix_agentd.pid
 LogFile=/var/log/zabbix/zabbix_agentd.log
@@ -138,13 +266,15 @@ ServerActive=IP_SERVEUR_ZABBIX
 
 Include=/etc/zabbix/zabbix_agentd.d/*.conf
 ",
-    require => Package['zabbix-agent'],
-    notify  => Service['zabbix-agent'],
+  require => Package['zabbix-agent'],
+  notify  => Service['zabbix-agent'],
 }
 
 service { 'zabbix-agent':
-    ensure  => running,
-    enable  => true,
-    require => Package['zabbix-agent'],
+  ensure  => running,
+  enable  => true,
+  require => Package['zabbix-agent'],
 }
 ```
+
+> ⚠️ Remplacer `IP_SERVEUR_ZABBIX` par l'adresse IP réelle de votre serveur Zabbix.
