@@ -302,6 +302,8 @@ chmod 644 /srv/tftp/ipxe.efi
 
 Utiliser le fichier `undionly.kpxe` si le bootloader iPXE utilisé est destiné aux clients BIOS/Legacy.
 
+Désormais, notre serveur DHCP indiquera le fichier `ipxe.efi`, dans lequel on a introduit un script permettant de passer à la suite et éviter la boucle. Les clients iront récupérer ce script sur le serveur TFTP, d'où le fait qu'on l'ait copier dans le répertoire `/srv/tftp`
+
 ---
 
 ## 8. Automatisation
