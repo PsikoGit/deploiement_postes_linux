@@ -1,11 +1,12 @@
 # Configuration PXE / iPXE — Déploiement réseau Ubuntu et Debian
 
-Architecture lors de la rédaction de cette documentation, phase de test avant de déployer le serveur à distance.
+Architecture avec serveur local :
+
 <img src="images/Image1.png" width="500" height="500" />
 
  ---
 
-Architecture prévue à la fin.
+Architecture avec serveur distant : 
 
 <img src="images/Image2.png" width="500" height="500" />
 
@@ -46,7 +47,9 @@ Cependant j'ai opté pour une solution manuelle, car il faut passer beaucoup de 
 ### 0.2 Debian
 Debian est bien réputé et facile à configurer pour le déploiement automatisé, il suffit d'extraire le **kernel** et l'**initrd** de l'iso [netboot](http://ftp.debian.org/debian/dists/stable/main/installer-amd64/current/images/netboot/) et de le faire télécharger aux clients PXE/iPXE, pour un total de 50Mo par poste. Cela va drastiquement réduire la charge réseau de la liaison WAN entre les LAN des postes clients et le serveur qui se trouvera sur le site distant. (En comparaison avec Ubuntu qui devra faire télécharger environ 2.5Go par poste).
 
-De plus, le déploiement automatisé de Debian est beaucoup mieux documenté donc plus facile à mettre en oeuvre. Si on veut éviter une solution manuelle, il faudra se diriger vers des solutions "SaaS" tel que Foreman, qu'on a cité juste avant, et d'autres encore.
+De plus, le déploiement automatisé de Debian est beaucoup mieux documenté donc plus facile à mettre en oeuvre. C'est pour cette raison que toute la suite se basera sur un déploiement de postes Debian.
+
+Si on veut éviter une solution manuelle, il faudra se diriger vers des solutions "SaaS" tel que Foreman, qu'on a cité juste avant, et d'autres encore.
 
 ## 1. IP statique sur le serveur
 
@@ -299,6 +302,8 @@ make bin-x86_64-efi/ipxe.efi EMBED=embed.ipxe
 cp bin-x86_64-efi/ipxe.efi /srv/tftp/
 chmod 644 /srv/tftp/ipxe.efi
 ```
+
+Attention si vous avez déjà le bootloader présent dans le répertoire `/srv/tftp` ([étape 4]((#4-téléchargement-des-bootloaders-ipxe)), pensez à le supprimer avant d'y copier un fichier du même nom, pour éviter des soucis.
 
 Utiliser le fichier `undionly.kpxe` si le bootloader iPXE utilisé est destiné aux clients BIOS/Legacy.
 
