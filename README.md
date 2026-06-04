@@ -53,5 +53,5 @@ La solution retenue repose sur une **architecture centralisée avec un serveur d
 
 | Document | Description |
 |---|---|
-| [Déployer un portail d'application](deployer_portailapplication_via_puppet.md) | Déployer un portail d'application permettant de filtrer les logiciels qui sont autorisés à être installé sur le poste |
+| [Déployer un portail d'application](deployer_portailapplication_via_puppet.md) | Déployer un portail d'application permettant aux utilisateurs d'installer une liste de d'applications |
 | [Déployer Zabbix automatiquement pour la supervision](deployer_zabbix_via_puppet.md) | Faire en sorte que les postes soient supervisés automatiquement via Zabbix |
