@@ -134,7 +134,7 @@ L'objectif est que les clients iPXE soient automatiquement des agents Puppet afi
 
 On va faire exécuter automatiquement un script sur les clients qui sera récupéré depuis le serveur.
 
-`nano /etc/var/www/debian/preseed.cfg`
+`nano /var/www/html/debian/preseed.cfg`
 
 Rajouter à la fin du fichier
 
