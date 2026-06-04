@@ -348,14 +348,14 @@ Categories=System;
     require => Package['gnome-shell-extension-desktop-icons-ng'],
   }
 
-  #Exécuter cette instruction au démarrage de la session, lorsque GNOME sera chargé,
-  #afin d'afficher l'icône du portail d'application
+  #Cette instruction résout un bug que j'avais : l'icone du portail d'applications ne s'affichait pas, il fallait que je rentre
+  #la commande puppet agent -t à la main une fois le poste déployé
   file { '/etc/xdg/autostart/puppet-apply.desktop':
     ensure  => present,
     content => "[Desktop Entry]
   Type=Application
   Name=Puppet Apply
-  Exec=/usr/bin/puppet agent -t
+  Exec=/opt/puppetlabs/bin/puppet agent -t
   NoDisplay=true
   ",
   }
