@@ -23,7 +23,10 @@ Architecture avec serveur distant :
 - [6. Montage et copie de l'ISO](#6-récupération-de-liso)
   - [6.1 ISO Ubuntu Server](#61-iso-ubuntu-server)
   - [6.2 ISO Debian](#62-iso-debian)
-- [7. Configuration DHCP](#7-configuration-dhcp-dnsmasq)
+- [7. Configuration DHCP](#7-configuration-dhcp)
+  - [La boucle infinie](#-le-probleme-de-la-boucle-infinie)
+  - [ProxyDHCP](#-proxydhcp)
+  - [Serveur DHCP dédié](#serveur-dhcp-dedie)
 - [8. Automatisation des questions](#8-automatisation)
     - [8.1 Automatisation Ubuntu](#81-automatisation-ubuntu)
     - [8.2 Automatisation Debian](#82-automatisation-debian)
@@ -206,19 +209,30 @@ Les fichiers qui vont nous intéresser pour la suite sont dans le répertoire `/
 
 ## 7. Configuration DHCP
 
-On configurera un serveur DHCP, afin d'indiquer aux clients PXE **l'option 066 (next-server)** qui sera le serveur TFTP à contacter et **l'option 067 (filename)** le bootloader à récupérer (_ipxe.efi_ ou _undionly.kpxe_). Si l'équipement qui gère le DHCP dans le réseau local ne permet pas de spécifier les options 066 et 067 aux clients DHCP, il faudra mettre en place un ProxyDHCP, pour que ce serveur donne les options 066 et 067 aux clients PXE. Ce ProxyDHCP est généralement un serveur DHCP sous Linux, configuré avec [isc-dhcp-server](https://ipxe.org/howto/dhcpd) ou avec [dnsmasq](https://ipxe.org/appnote/proxydhcp), afin qu'il octroie les options 066 et 067, étant donné que le serveur DHCP principal ne permet pas de le faire.
+On configurera un serveur DHCP, afin d'indiquer aux clients PXE **l'option 066 (next-server)** qui sera le serveur TFTP à contacter et **l'option 067 (filename)** le bootloader à récupérer (_ipxe.efi_ ou _undionly.kpxe_). 
 
-Il faudra donner le bon bootloader selon si l'ordinateur client est en UEFI ou BIOS. Si le serveur DHCP (box internet, routeur, etc..) ne permet pas de différencier entre UEFI et BIOS, il faudra restreindre à un type d'ordinateurs. Ou alors utiliser le ProxyDHCP, car les serveurs Linux permettent de faire la distinction entre UEFI et BIOS.
+Si l'équipement qui gère le DHCP dans le réseau local ne permet pas de spécifier ces options, il faudra mettre en place un **ProxyDHCP** : un serveur DHCP Linux (via [isc-dhcp-server](https://ipxe.org/howto/dhcpd) ou [dnsmasq](https://ipxe.org/appnote/proxydhcp)) qui se charge uniquement d'octroyer les options 066 et 067.
 
-Il y a également le problème de [la boucle infinie](https://ipxe.org/howto/chainloading#breaking_the_infinite_loop) à gérer. Voici le problème : 
+Il faudra donner le bon bootloader selon si le client est en UEFI ou BIOS. Si le serveur DHCP principal ne permet pas de faire cette distinction, soit on se restreint à un seul type, soit on passe par le ProxyDHCP — les serveurs Linux sachant différencier les deux.
 
-Un client fait une requête DHCP en PXE -> deviens iPXE et refait une requête DHCP -> comme le serveur DHCP est chargé de donner le bootloader iPXE, il redonne le même bootloader -> le client recharge le bootloader iPXE, refait une requête DHCP -> le serveur rerépond avec le bootloader iPXE, etc...
+### Le problème de la boucle infinie
 
-Pour palier à ce problème il y a 2 solutions, soit détecter dans la configuration du serveur DHCP que le client est déjà en iPXE, soit utiliser la solution [embedded script](https://ipxe.org/howto/chainloading#breaking_the_loop_with_an_embedded_script). On utilisera la première méthode dans le cadre du ProxyDHCP, et la seconde méthode dans le cadre d'un serveur DHCP local.
+Il y a également [la boucle infinie](https://ipxe.org/howto/chainloading#breaking_the_infinite_loop) à gérer :
 
-PARTIE PROXYDHCP : 
+1. Le client fait une requête DHCP en PXE
+2. Il devient iPXE et refait une requête DHCP
+3. Le serveur DHCP lui redonne le même bootloader iPXE
+4. Le client recharge iPXE, refait une requête DHCP → retour à l'étape 3 ♾️
 
-Pour le ProxyDHCP, j'installe un serveur DHCP sur le serveur iPXE lui même, via `dnsmasq`. Mon serveur iPXE indiquera uniquement l'option 066 et 067 aux clients PXE, car il y a déjà un serveur DHCP attribuant des paramètres IP dans le réseau local :
+Deux solutions existent :
+- **Détecter dans la config DHCP** que le client est déjà en iPXE → méthode utilisée pour le ProxyDHCP
+- **[Embedded script](https://ipxe.org/howto/chainloading#breaking_the_loop_with_an_embedded_script)** : on compile un bootloader avec un script intégré qui redirige directement → méthode utilisée pour le serveur DHCP dédié
+
+---
+
+### ProxyDHCP
+
+J'installe `dnsmasq` directement sur le serveur iPXE. Il ne distribuera pas de paramètres IP (c'est déjà géré par le DHCP du réseau), il se contentera d'envoyer les options 066 et 067 aux clients PXE.
 
 Fichier `/etc/dnsmasq.d/pxe.conf` :
 
@@ -254,7 +268,7 @@ tag-if=set:ipxe-ok,tag:ipxe-http,tag:ipxe-menu
 
 # Client en Legacy BIOS
 pxe-service=tag:!ipxe-ok,X86PC,PXE,undionly.kpxe,IP_SERVEUR
-# Client en UEFI 32 bit (rare mais sait-on jamais !)
+# Client en UEFI 32 bit (rare mais sait-on jamais)
 pxe-service=tag:!ipxe-ok,IA32_EFI,PXE,ipxe.efi,IP_SERVEUR
 # Client en BC_EFI (carte réseau rare)
 pxe-service=tag:!ipxe-ok,BC_EFI,PXE,ipxe.efi,IP_SERVEUR
@@ -268,19 +282,16 @@ dhcp-boot=tag:ipxe-ok,http://IP_SERVEUR/install.ipxe
 ```bash
 systemctl restart dnsmasq.service
 ```
-Il y a plusieurs manières et syntaxes d'écrire le fichier pour reproduire le même fonctionnement, notamment sur la détection iPXE.
+> Il y a plusieurs façons d'écrire ce fichier pour arriver au même résultat, notamment sur la détection iPXE.
 
-PARTIE SERVEUR DHCP :
+### Serveur DHCP dédié
 
-Dans le cas où un équipement dédié gère le DHCP (routeur, pare-feu, vrai serveur physique, etc...), la configuration sera un peu différente. On utilisera la solution [embedded script](https://ipxe.org/howto/chainloading#breaking_the_loop_with_an_embedded_script) pour casser la boucle infinie, et ainsi indiquer aux clients iPXE où chercher la suite de la configuration. 
+Dans le cas où un équipement dédié gère le DHCP (routeur, pare-feu, serveur physique...), on utilisera la solution [embedded script](https://ipxe.org/howto/chainloading#breaking_the_loop_with_an_embedded_script) pour casser la boucle.
 
-Commencer par configurer votre serveur DHCP (routeur, pare-feu, etc...) afin d'octroyer les options 066 et 067 aux ordinateurs démarrant sur le réseau, une fois que c'est fait :
-
-Sur le serveur iPXE, installer les paquets `apt install -y build-essential liblzma-dev isolinux binutils make git`
-
-Clôner le dépot iPXE : 
+Commencer par configurer votre serveur DHCP (routeur, pare-feu, etc...) afin d'octroyer les options 066 et 067 aux ordinateurs démarrant sur le réseau, puis sur le serveur iPXE :
 
 ```bash
+apt install -y build-essential liblzma-dev isolinux binutils make git
 git clone https://github.com/ipxe/ipxe.git
 cd ipxe/src
 nano embed.ipxe
@@ -295,7 +306,7 @@ dhcp
 chain http://IP_SERVEUR/install.ipxe || shell
 ```
 
-Puis : 
+Puis on compile et on déploie :
 
 ```
 make bin-x86_64-efi/ipxe.efi EMBED=embed.ipxe
@@ -303,11 +314,12 @@ cp bin-x86_64-efi/ipxe.efi /srv/tftp/
 chmod 644 /srv/tftp/ipxe.efi
 ```
 
-Attention si vous avez déjà le bootloader présent dans le répertoire `/srv/tftp` ([étape 4]((#4-téléchargement-des-bootloaders-ipxe)), pensez à le supprimer avant d'y copier un fichier du même nom, pour éviter des soucis.
+> ⚠️ Si un bootloader `ipxe.efi` est déjà présent dans `/srv/tftp/` ([étape 4](#4-téléchargement-des-bootloaders-ipxe)), supprimez-le avant de copier le nouveau pour éviter tout conflit.
 
-Utiliser le fichier `undionly.kpxe` si le bootloader iPXE utilisé est destiné aux clients BIOS/Legacy.
+Le bootloader `ipxe.efi` contient maintenant un script embarqué qui redirige 
+directement vers `install.ipxe` — la boucle est cassée.
 
-Désormais, notre serveur DHCP indiquera le fichier `ipxe.efi`, dans lequel on a introduit un script permettant de passer à la suite et éviter la boucle. Les clients iront récupérer ce script sur le serveur TFTP, d'où le fait qu'on l'ait copier dans le répertoire `/srv/tftp`
+> Utilisez `undionly.kpxe` à la place si vous ciblez des clients BIOS/Legacy.
 
 ---
 
