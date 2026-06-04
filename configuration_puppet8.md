@@ -204,6 +204,8 @@ Une fois le client démarré, tester le bon fonctionnement de l'agent en tant qu
 /opt/puppetlabs/bin/puppet agent --test
 ```
 
+Si c'est ok, on va voir comment déployer de la configuration via Puppet, en commençant par le portail Application : [ici !](deployer_portailapplication_via_puppet.md)
+
 ---
 
 ## 6. Commandes utiles
