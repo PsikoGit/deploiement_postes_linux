@@ -78,7 +78,22 @@ nmcli con up "Wired connection 1"
 apt install tftpd-hpa apache2 wget dnsmasq
 ```
 
-⚠️Attention, la sécurisation des services HTTP et TFTP du serveur n'ont pas été pris en compte dans cette documentation, cette partie prenant beaucoup de temps, j'ai décider de l'omettre, ça sera à vous de sécuriser le serveur convenablement
+⚠️Attention, la sécurisation des services HTTP et TFTP du serveur n'ont pas été pris en compte dans cette documentation, cette partie prenant beaucoup de temps, j'ai décider d'omettre la documentation de sécurisation, cependant voici les bonnes pratiques de sécurité :
+
+HTTP : 
+- Enlever le listing des répertoires (Options -Indexes)
+- Désactiver la signature du serveur (ServerSignature Off, ServerTokens Prod)
+- Désactiver les méthodes HTTP inutiles (garder uniquement GET, POST, etc...)
+- Restreindre l'accès aux répertoires/fichiers sensibles
+- Désactiver le .htaccess (AllowOverride None)
+- Activer HTTPS, cependant la configuration changera énormément pour iPXE, Zabbix, etc..
+- Ajouter les headers de sécurité si besoin (X-Frame-Options, X-Content-Type-Options, Content-Security-Policy)
+
+TFTP :
+- Restreindre l'accès par IP source avec iptables ou ufw (uniquement le réseau PXE)
+- Passer en mode lecture seule (--secure avec tftpd-hpa)
+- Limiter le répertoire servi à /srv/tftp
+- Logger les accès (--verbosity dans tftpd-hpa)
 
 ---
 
