@@ -6,7 +6,7 @@ La première fonctionnalité qu'on va mettre en place est un portail d'applicati
 
 La gestion centralisée des applications se basera sur un fichier json `/var/www/html/apps.json`, grâce à ce fichier on automatisera la liste des logiciels pouvant être installé via l'application Python, on automatisera également l'attribution des droits sudo aux utilisateurs pour l'installation des logiciels.
 
-> ⚠️ Le script python développé pour le portail d'application prends en compte que les .deb disponibles directement dans les dépôts Debian, il faudra le modifier pour ajouter la gestion des AppImage par exemple, qui est répandu. Une version supportant une gamme plus larges de format sera proposé ultérieurement ⚠️
+> ⚠️ Le script python développé pour le portail d'application prends en compte que les .deb disponibles directement dans les dépôts Debian, il faudra le modifier pour ajouter la gestion des AppImage par exemple, qui est répandu. ⚠️
 
 ---
 
