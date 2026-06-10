@@ -282,7 +282,7 @@ App().run()
 
 </details>
 
-Et le mettre à l'emplacement `/etc/puppetlabs/code/environments/manage/modules/portail/files`
+Et le mettre à l'emplacement `/etc/puppetlabs/code/environments/manage/modules/portail/files/`
 
 ---
 
