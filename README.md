@@ -56,3 +56,4 @@ La solution retenue repose sur une **architecture centralisée avec un serveur d
 | [Déployer un portail d'application](deployer_portailapplication_via_puppet.md) | Déployer un portail d'application permettant aux utilisateurs d'installer une liste d'applications |
 | [Déployer Zabbix automatiquement pour la supervision](deployer_zabbix_via_puppet.md) | Faire en sorte que les postes soient supervisés automatiquement via Zabbix |
 | [Déployer GLPI automatiquement pour l'inventaire](deployer_glpi.md) | Déployer GLPI Agent automatiquement sur les postes afin d'avoir un inventaire des postes sur le serveur GLPI | 
+| [Déployer MeshCentral automatiquement](deployer_meshcentral.md) | Faire en sorte que les postes soient automatiquement supervisés auprès du serveur MeshCentral afin de pouvoir prendre la main à distance sur les postes |
