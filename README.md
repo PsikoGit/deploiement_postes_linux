@@ -4,7 +4,7 @@
 
 ## Mission
 
-Trouver une solution analogue à **Microsoft Intune** pour les postes de formation sous Linux :
+Trouver une solution alternative à **Microsoft Intune** pour les postes de formation sous Linux :
 
 | Domaine | Description |
 |---|---|
